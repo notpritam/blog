@@ -12,6 +12,12 @@ describe('slugify', () => {
   it('cuts at a word boundary under maxLength', () => {
     expect(slugify('alpha beta gamma delta', 12)).toBe('alpha-beta');
   });
+  it('returns the whole cut when a single word has no boundary to respect', () => {
+    expect(slugify('supercalifragilistic', 5)).toBe('super');
+  });
+  it('does not trim a complete word that already ends exactly at the cut', () => {
+    expect(slugify('alpha beta', 5)).toBe('alpha');
+  });
 });
 
 describe('reading time', () => {
@@ -76,5 +82,21 @@ describe('renderMarkdown', () => {
     expect(r.wordCount).toBe(464);
     expect(r.readingMinutes).toBe(2);
     expect(r.excerpt).toBe('First paragraph here.');
+  });
+
+  it('counts words at every block boundary, not just top-level siblings', async () => {
+    const list = await renderMarkdown('- one\n- two\n- three');
+    expect(list.wordCount).toBe(3);
+
+    const table = await renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |');
+    expect(table.wordCount).toBe(4);
+
+    const blockquote = await renderMarkdown('> alpha\n>\n> beta');
+    expect(blockquote.wordCount).toBe(2);
+  });
+
+  it('excludes the injected callout title from the word count', async () => {
+    const r = await renderMarkdown('> [!NOTE]\n> alpha beta\n>\n> gamma');
+    expect(r.wordCount).toBe(3);
   });
 });

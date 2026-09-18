@@ -1,5 +1,5 @@
 import type { Element, ElementContent, Root, RootContent } from 'hast';
-import { visit } from 'unist-util-visit';
+import { SKIP, visit } from 'unist-util-visit';
 
 /** Lazy-load every image; a paragraph holding only one image becomes a <figure> (caption = title). */
 export function rehypeImages() {
@@ -21,6 +21,10 @@ export function rehypeImages() {
         children.push({ type: 'element', tagName: 'figcaption', properties: {}, children: [{ type: 'text', value: title }] });
       }
       (parent.children as RootContent[])[index] = { type: 'element', tagName: 'figure', properties: {}, children };
+      // The old <p>'s children (including the now-relocated `img`) are still
+      // reachable via `node`; without SKIP, unist-util-visit would keep
+      // descending into them and re-apply loading/decoding to the same img.
+      return [SKIP, index + 1] as const;
     });
   };
 }
