@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
     deviceSizes: [390, 640, 768, 1024, 1280, 1440, 1920],
     imageSizes: [28, 36, 64, 128, 256, 465, 715],
   },
+  async rewrites() {
+    return [{ source: '/:slug.md', destination: '/md/:slug' }];
+  },
   async headers() {
     return [
       {
