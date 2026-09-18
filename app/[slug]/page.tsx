@@ -69,7 +69,7 @@ export default async function ArticlePage({ params }: Params) {
           {post.tags.length > 0 && (
             <ul className="mt-12 flex flex-wrap gap-2" aria-label="Tags">
               {post.tags.map((t) => (
-                <li key={t}><Link href={`/tag/${t}`} className="link-hover inline-block border border-dashed border-line px-3 py-1.5 text-[13px]">{t}</Link></li>
+                <li key={t}><Link href={`/tag/${encodeURIComponent(t)}`} className="link-hover inline-block border border-dashed border-line px-3 py-1.5 text-[13px]">{t}</Link></li>
               ))}
             </ul>
           )}

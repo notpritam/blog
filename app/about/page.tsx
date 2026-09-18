@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'About', alternates: { canonical: '/a
 
 export default function AboutPage() {
   const s = getSettings(getDb());
-  const links = [[s.social_github, 'GitHub'], [s.social_linkedin, 'LinkedIn'], [s.social_x, 'X'], [s.social_youtube, 'YouTube'], [s.author_url, 'Portfolio']].filter(([h]) => h) as [string, string][];
+  const links = [[s.social_github, 'GitHub'], [s.social_linkedin, 'LinkedIn'], [s.social_x, 'X'], [s.social_youtube, 'YouTube'], [s.author_url, 'Portfolio']].filter((pair): pair is [string, string] => Boolean(pair[0]));
   return (
     <div className="page">
       <JsonLd data={{ '@context': 'https://schema.org', ...personJsonLd(s) }} />

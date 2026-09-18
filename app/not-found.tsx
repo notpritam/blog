@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { SearchForm } from '@/components/site/search-form';
 
+export const dynamic = 'force-dynamic';
+
 export default function NotFound() {
   return (
     <div className="page py-24">

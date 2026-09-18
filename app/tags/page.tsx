@@ -14,7 +14,7 @@ export default function TagsPage() {
       <ul className="grid gap-x-8 py-8 sm:grid-cols-2 md:grid-cols-3">
         {tags.map((t) => (
           <li key={t.tag} className="dashed-b flex items-baseline justify-between py-3">
-            <Link href={`/tag/${t.tag}`} className="link-hover text-[16px]">{t.tag}</Link>
+            <Link href={`/tag/${encodeURIComponent(t.tag)}`} className="link-hover text-[16px]">{t.tag}</Link>
             <span className="eyebrow">{t.count}</span>
           </li>
         ))}

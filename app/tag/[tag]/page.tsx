@@ -10,15 +10,19 @@ import { getSettings, siteUrl } from '@/lib/settings';
 export const dynamic = 'force-dynamic';
 type Params = { params: Promise<{ tag: string }> };
 
+function normalizeTag(tag: string) {
+  return decodeURIComponent(tag).toLowerCase();
+}
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { tag } = await params;
-  const t = decodeURIComponent(tag);
-  return { title: `Tagged “${t}”`, description: `Writing tagged ${t}.`, alternates: { canonical: `/tag/${t}` } };
+  const t = normalizeTag(tag);
+  return { title: `Tagged “${t}”`, description: `Writing tagged ${t}.`, alternates: { canonical: `/tag/${encodeURIComponent(t)}` } };
 }
 
 export default async function TagPage({ params }: Params) {
   const { tag } = await params;
-  const t = decodeURIComponent(tag).toLowerCase();
+  const t = normalizeTag(tag);
   const db = getDb();
   const { posts, total } = listPublished(db, { tag: t, perPage: 100 });
   if (total === 0) notFound();
