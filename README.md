@@ -1,0 +1,26 @@
+# blog
+
+The blog at https://blog.notpritam.in. Next.js 15 + SQLite. Markdown is the source of truth; HTML is rendered on write.
+
+## Develop
+
+    export PATH=/home/pritam/.nvm/versions/node/v24.20.0/bin:$PATH
+    npm ci
+    npm run dev              # http://localhost:8799
+    npm test                 # unit (vitest)
+    npm run test:e2e         # playwright against a seeded .e2e-data/
+    npm run verify           # typecheck + unit + build + e2e
+
+Data lives in `data/` (`blog.db`, `uploads/`), or wherever `BLOG_DATA_DIR` points.
+
+## Content
+
+    npm run import:hashnode  # idempotent: pulls the four Hashnode posts, rehomes images
+    npm run rerender         # re-run the markdown pipeline over every post
+
+## Routes
+
+`/`, `/page/N`, `/<slug>`, `/<slug>.md`, `/tag/<tag>`, `/tags`, `/search?q=`, `/about`,
+`/rss.xml`, `/feed.json`, `/sitemap.xml`, `/robots.txt`, `/llms.txt`, `/og/<slug>.png`, `/uploads/…`.
+
+Design and plans: `docs/superpowers/`.
