@@ -22,8 +22,8 @@ export default function Home() {
         <p className="mt-3 max-w-[60ch] text-[18px] leading-[27px] text-text-soft">{s.site_tagline}</p>
       </section>
       {featured ? <FeaturedPost post={featured} settings={s} /> : <p className="py-16 text-text-soft">No posts yet.</p>}
-      <PostGrid posts={rest} settings={s} />
-      <Pagination page={page} pages={pages} />
+      {rest.length > 0 && <PostGrid posts={rest} settings={s} />}
+      {featured && <Pagination page={page} pages={pages} />}
     </div>
   );
 }

@@ -23,7 +23,7 @@ export function blogPostingJsonLd(post: PostFull, s: Settings, base: string): Js
     '@context': 'https://schema.org', '@type': 'BlogPosting', '@id': `${url}#article`,
     headline: post.seoTitle ?? post.title, alternativeHeadline: post.subtitle || undefined,
     description: post.seoDescription ?? post.excerpt, image, url, mainEntityOfPage: url,
-    datePublished: post.publishedAt, dateModified: post.updatedAt > post.publishedAt ? post.updatedAt : post.publishedAt,
+    datePublished: post.publishedAt, dateModified: Date.parse(post.updatedAt) > Date.parse(post.publishedAt) ? post.updatedAt : post.publishedAt,
     author: { '@type': 'Person', name: s.author_name, url: s.author_url },
     publisher: { '@type': 'Person', name: s.author_name, url: s.author_url },
     keywords: post.tags.join(', '), wordCount: post.wordCount, inLanguage: 'en', isAccessibleForFree: true,

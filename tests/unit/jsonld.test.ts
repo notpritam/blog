@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { blogPostingJsonLd, breadcrumbJsonLd, personJsonLd, websiteJsonLd } from '@/lib/seo/jsonld';
+import { serializeJsonLd } from '@/lib/seo/serialize';
+import { blogPostingJsonLd, breadcrumbJsonLd, collectionPageJsonLd, personJsonLd, websiteJsonLd } from '@/lib/seo/jsonld';
 import { SETTING_DEFAULTS } from '@/lib/settings';
 import type { PostFull } from '@/lib/posts/types';
 
@@ -30,5 +31,23 @@ describe('jsonld', () => {
     expect(personJsonLd(s).sameAs).toEqual(['https://github.com/notpritam', 'https://www.linkedin.com/in/notpritamsharma/', 'https://notpritam.in']);
     const b = breadcrumbJsonLd([{ name: 'Home', url: 'https://x.dev/' }, { name: 'Hello', url: 'https://x.dev/hello' }]);
     expect(b.itemListElement[1]).toEqual({ '@type': 'ListItem', position: 2, name: 'Hello', item: 'https://x.dev/hello' });
+  });
+  it('compares dateModified by instant, not lexicographically', () => {
+    const same = blogPostingJsonLd({ ...post, updatedAt: '2026-05-21T19:45:54.777+00:00' }, s, 'https://blog.notpritam.in');
+    expect(same.dateModified).toBe(post.publishedAt);
+    const later = blogPostingJsonLd({ ...post, updatedAt: '2026-06-01T00:00:00.000Z' }, s, 'https://blog.notpritam.in');
+    expect(later.dateModified).toBe('2026-06-01T00:00:00.000Z');
+  });
+  it('builds a CollectionPage with an ItemList of posts', () => {
+    const c = collectionPageJsonLd('Tagged tools', 'https://x.dev/tag/tools', [post], s, 'https://x.dev');
+    expect(c['@type']).toBe('CollectionPage');
+    expect((c.isPartOf as { '@id': string })['@id']).toBe('https://x.dev#website');
+    const mainEntity = c.mainEntity as { itemListElement: unknown[] };
+    expect(mainEntity.itemListElement[0]).toEqual({ '@type': 'ListItem', position: 1, url: 'https://x.dev/hello', name: 'Hello' });
+  });
+  it('escapes </script> when serializing JSON-LD', () => {
+    const out = serializeJsonLd({ a: '</script>' });
+    expect(out).toContain('\\u003c/script>');
+    expect(out).not.toContain('</script>');
   });
 });
