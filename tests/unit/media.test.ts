@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import sharp from 'sharp';
 import { openDb, type Db } from '@/lib/db/client';
+import { media } from '@/lib/db/schema';
 import { saveUpload } from '@/lib/media/store';
 
 let dir: string;
@@ -40,5 +42,34 @@ describe('saveUpload', () => {
 
   it('rejects unsupported types', async () => {
     await expect(saveUpload(db, { buffer: Buffer.from('hello'), filename: 'x.exe' })).rejects.toThrow(/Unsupported/);
+  });
+
+  it('does not dedupe different content, even when superficially similar', async () => {
+    const bufferA = await sharp({ create: { width: 4, height: 4, channels: 3, background: '#000' } }).png().toBuffer();
+    const bufferB = await sharp({ create: { width: 4, height: 4, channels: 3, background: '#fff' } }).png().toBuffer();
+    const a = await saveUpload(db, { buffer: bufferA, filename: 'a.png' });
+    const b = await saveUpload(db, { buffer: bufferB, filename: 'b.png' });
+    expect(a.path).not.toBe(b.path);
+    expect(a.bytes).not.toBe(b.bytes);
+  });
+
+  it('does not dedupe on a truncated-hash collision with a different byte length', async () => {
+    const buffer = await sharp({ create: { width: 4, height: 4, channels: 3, background: '#f00' } }).png().toBuffer();
+    const hash8 = crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 8);
+    const collidingPath = `/uploads/2020/01/${hash8}-x.png`;
+    db.insert(media).values({ path: collidingPath, bytes: 1, mime: 'image/png' }).run();
+
+    const m = await saveUpload(db, { buffer, filename: 'x.png' });
+
+    expect(m.path).not.toBe(collidingPath);
+    expect(fs.existsSync(path.join(dir, m.path.replace(/^\//, '')))).toBe(true);
+  });
+
+  it('normalizes .jpeg to the canonical .jpg extension for dedupe', async () => {
+    const buffer = await sharp({ create: { width: 4, height: 4, channels: 3, background: '#0f0' } }).jpeg().toBuffer();
+    const a = await saveUpload(db, { buffer, filename: 'a.jpeg' });
+    const b = await saveUpload(db, { buffer, filename: 'a.jpg' });
+    expect(a.path).toMatch(/\.jpg$/);
+    expect(b.path).toBe(a.path);
   });
 });

@@ -15,7 +15,8 @@ const MIME_BY_EXT: Record<string, string> = {
 export const MEDIA_MIME = MIME_BY_EXT;
 
 function safeBase(filename: string): { base: string; ext: string } {
-  const ext = path.extname(filename).toLowerCase();
+  let ext = path.extname(filename).toLowerCase();
+  if (ext === '.jpeg') ext = '.jpg'; // canonicalize so photo.jpg and photo.jpeg share one stored file
   const base = path.basename(filename, path.extname(filename)).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'file';
   return { base, ext };
 }
@@ -29,14 +30,24 @@ export async function saveUpload(
   if (!mime) throw new Error(`Unsupported file type: ${ext || '(none)'}`);
   const hash = crypto.createHash('sha256').update(input.buffer).digest('hex').slice(0, 8);
   const now = new Date();
-  const rel = path.posix.join(String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, '0'), `${hash}-${base}${ext}`);
-  const publicPath = `/uploads/${rel}`;
+  const dir = path.posix.join(String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, '0'));
 
   // Dedupe by content hash rather than the exact computed path: identical bytes uploaded
   // under a different filename (or in a different month) must resolve to the same stored
   // file, so match on the `{hash}-...{ext}` filename segment, not the full public path.
+  // The LIKE match only proves the *hash* agrees (8 hex chars = 32 bits, so a truncated-hash
+  // collision between two different files is unlikely but not impossible) — confirm the byte
+  // length too before treating it as a duplicate. If it doesn't match, this is a hash
+  // collision with different content: store the new upload under a name suffixed with the
+  // colliding row's id so neither file gets overwritten.
   const existing = db.select().from(media).where(like(media.path, `%/${hash}-%${ext}`)).get();
-  if (existing) return { id: existing.id, path: existing.path, width: existing.width, height: existing.height, bytes: existing.bytes, mime: existing.mime };
+  if (existing && existing.bytes === input.buffer.length) {
+    return { id: existing.id, path: existing.path, width: existing.width, height: existing.height, bytes: existing.bytes, mime: existing.mime };
+  }
+
+  const filename = existing ? `${hash}-${base}-${existing.id}${ext}` : `${hash}-${base}${ext}`;
+  const rel = path.posix.join(dir, filename);
+  const publicPath = `/uploads/${rel}`;
 
   let width: number | null = null;
   let height: number | null = null;
