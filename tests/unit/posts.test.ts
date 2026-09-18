@@ -58,7 +58,8 @@ describe('queries', () => {
   });
   it('searches published posts with FTS and tolerates quotes', () => {
     expect(searchPublished(db, 'llamas').map((p) => p.slug)).toEqual(['a']);
-    expect(searchPublished(db, 'alph"a OR').map((p) => p.slug)).toEqual(['a']);
+    expect(searchPublished(db, 'alph"a llam*').map((p) => p.slug)).toEqual(['a']); // stray quotes and * are stripped, prefix match still works
+    expect(searchPublished(db, 'alpha zzz')).toEqual([]); // AND semantics: every term must match
     expect(searchPublished(db, '')).toEqual([]);
   });
   it('resolves redirects', () => {

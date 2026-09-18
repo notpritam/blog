@@ -83,12 +83,9 @@ export function listTags(db: Db): { tag: string; count: number }[] {
   ).all() as { tag: string; count: number }[];
 }
 
+// Terms are quoted (FTS5 syntax is disabled inside quotes) and prefix-matched; FTS5 ANDs juxtaposed terms.
 export function ftsQuery(q: string): string {
-  // FTS5 treats space-juxtaposed terms as an implicit AND, which would make a
-  // stray token like the "OR" in `alph"a OR` (quoted so it can't be parsed as
-  // the boolean operator) fail to match anything and sink the whole query.
-  // Joining with an explicit OR keeps multi-word input tolerant of junk terms.
-  return q.split(/\s+/).map((t) => t.replace(/["*]/g, '')).filter(Boolean).map((t) => `"${t}"*`).join(' OR ');
+  return q.split(/\s+/).map((t) => t.replace(/["*]/g, '')).filter(Boolean).map((t) => `"${t}"*`).join(' ');
 }
 
 export function searchPublished(db: Db, q: string, limit = 20): PostSummary[] {
