@@ -76,7 +76,7 @@ export async function fetchToUpload(db: Db, url: string, opts: { alt?: string; c
   if (existing) {
     return { id: existing.id, path: existing.path, width: existing.width, height: existing.height, bytes: existing.bytes, mime: existing.mime };
   }
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
   if (!res.ok) throw new Error(`Fetch ${url} failed: ${res.status}`);
   const buffer = Buffer.from(await res.arrayBuffer());
   let filename = path.basename(new URL(url).pathname) || 'file';

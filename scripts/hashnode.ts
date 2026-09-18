@@ -73,13 +73,37 @@ export function normalizeHashnodeImages(md: string): string {
   );
 }
 
-/** Every image the post depends on, from any remote host — the blog must own all of its own assets. */
+/**
+ * Every image the post depends on, from any remote host — the blog must own all of its own
+ * assets. The URL body allows one level of balanced parentheses (e.g. `img_(1).png`) so a
+ * literal `)` inside the URL itself isn't mistaken for the closing paren of the markdown
+ * image syntax, which would otherwise truncate the captured URL.
+ */
 export function collectRemoteImages(md: string): string[] {
-  return [...new Set([...md.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)(?:\s+"[^"]*")?\)/g)].map((m) => m[1]))];
+  return [
+    ...new Set(
+      [...md.matchAll(/!\[[^\]]*\]\((https?:\/\/(?:[^\s()]|\([^\s()]*\))+)(?:\s+"[^"]*")?\)/g)].map((m) => m[1]),
+    ),
+  ];
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * A plain `split(...).join(...)` has no end-of-URL boundary, so a URL that is a prefix of
+ * another (e.g. `https://x.png` vs `https://x.png?v=2`) would have the shorter one's
+ * replacement bleed into the longer one. Process the longest URLs first, and anchor each
+ * replacement so it only matches where the URL is actually followed by the closing `)` or
+ * whitespace before a title — never mid-URL.
+ */
 export function rewriteImages(md: string, map: Map<string, string>): string {
   let out = md;
-  for (const [from, to] of map) out = out.split(`](${from}`).join(`](${to}`);
+  const entries = [...map.entries()].sort((a, b) => b[0].length - a[0].length);
+  for (const [from, to] of entries) {
+    const re = new RegExp('\\]\\(' + escapeRegExp(from) + '(?=[)\\s])', 'g');
+    out = out.replace(re, () => `](${to}`);
+  }
   return out;
 }

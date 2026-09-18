@@ -32,4 +32,16 @@ describe('hashnode helpers', () => {
     const md = '![a](https://cdn.hashnode.com/a.png) and ![b](https://iili.io/b.png "t") and ![c](https://cdn.jsdelivr.net/gh/x/c.png) and ![a2](https://cdn.hashnode.com/a.png)';
     expect(collectRemoteImages(md)).toEqual(['https://cdn.hashnode.com/a.png', 'https://iili.io/b.png', 'https://cdn.jsdelivr.net/gh/x/c.png']);
   });
+  it('collects the full url even when it contains a literal balanced parenthesis', () => {
+    const md = '![a](https://example.com/img_(1).png)';
+    expect(collectRemoteImages(md)).toEqual(['https://example.com/img_(1).png']);
+  });
+  it('rewrites a url without corrupting a longer url that has it as a prefix', () => {
+    const md = '![a](https://x.png) and ![b](https://x.png?v=2)';
+    const map = new Map([
+      ['https://x.png', '/uploads/a.png'],
+      ['https://x.png?v=2', '/uploads/b.png'],
+    ]);
+    expect(rewriteImages(md, map)).toBe('![a](/uploads/a.png) and ![b](/uploads/b.png)');
+  });
 });
