@@ -20,7 +20,7 @@ export function buildRss(posts: PostFull[], s: Settings, base: string): string {
       <dc:creator>${escapeXml(s.author_name)}</dc:creator>
       <description>${escapeXml(p.subtitle || p.excerpt)}</description>
       ${p.tags.map((t) => `<category>${escapeXml(t)}</category>`).join('')}
-      ${p.coverPath ? `<enclosure url="${base}${p.coverPath}" type="image/${p.coverPath.split('.').pop() === 'jpg' ? 'jpeg' : p.coverPath.split('.').pop()}" length="0"/>` : ''}
+      ${p.coverPath ? (() => { const ext = p.coverPath!.split('.').pop()?.toLowerCase() ?? 'png'; return `<enclosure url="${escapeXml(base + p.coverPath)}" type="image/${ext === 'jpg' ? 'jpeg' : ext}" length="0"/>`; })() : ''}
       <content:encoded><![CDATA[${absolutizeHtml(p.bodyHtml, base).replace(/]]>/g, ']]]]><![CDATA[>')}]]></content:encoded>
     </item>`).join('');
   return `<?xml version="1.0" encoding="UTF-8"?>

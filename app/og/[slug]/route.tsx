@@ -4,7 +4,7 @@ import { ImageResponse } from 'next/og';
 import { getDb } from '@/lib/db/client';
 import { getPublishedBySlug } from '@/lib/posts/queries';
 import { formatDate } from '@/lib/format';
-import { getSettings } from '@/lib/settings';
+import { getSettings, siteUrl } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +19,15 @@ async function avatarDataUrl(): Promise<string | null> {
   } catch { return null; }
 }
 
+let assets: Promise<{ tight: Buffer; mono: Buffer; avatar: string | null }> | null = null;
+function loadAssets() {
+  return (assets ??= Promise.all([
+    font('@fontsource/inter-tight', 'inter-tight-latin-600-normal.woff'),
+    font('@fontsource/jetbrains-mono', 'jetbrains-mono-latin-400-normal.woff'),
+    avatarDataUrl(),
+  ]).then(([tight, mono, avatar]) => ({ tight, mono, avatar })));
+}
+
 export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug: raw } = await ctx.params;
   const slug = raw.replace(/\.png$/, '');
@@ -27,20 +36,16 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
   const post = slug === 'site' ? null : getPublishedBySlug(db, slug);
   if (slug !== 'site' && !post) return new Response('Not found', { status: 404 });
 
-  const [tight, mono, avatar] = await Promise.all([
-    font('@fontsource/inter-tight', 'inter-tight-latin-600-normal.woff'),
-    font('@fontsource/jetbrains-mono', 'jetbrains-mono-latin-400-normal.woff'),
-    avatarDataUrl(),
-  ]);
+  const { tight, mono, avatar } = await loadAssets();
   const title = post ? post.title : `${s.site_title} · Blog`;
   const eyebrow = post ? `${formatDate(post.publishedAt)}  ·  ${post.readingMinutes} MIN READ` : s.site_tagline.toUpperCase();
   const size = title.length > 90 ? 44 : title.length > 60 ? 52 : 64;
-  const host = new URL(process.env.SITE_URL ?? 'https://blog.notpritam.in').host;
+  const host = new URL(siteUrl()).host;
 
   return new ImageResponse(
     (
       <div style={{ width: 1200, height: 630, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', color: '#111111', padding: 64, fontFamily: 'InterTight' }}>
-        <div style={{ position: 'absolute', inset: 24, border: '2px dashed #d4d4d4' }} />
+        <div style={{ position: 'absolute', top: 24, right: 24, bottom: 24, left: 24, border: '2px dashed #d4d4d4' }} />
         <div style={{ position: 'absolute', left: 0, top: 0, width: 14, height: 630, background: s.accent }} />
         <div style={{ display: 'flex', fontFamily: 'JetBrainsMono', fontSize: 22, letterSpacing: 1, color: '#707070', textTransform: 'uppercase' }}>{eyebrow}</div>
         <div style={{ display: 'flex', fontSize: size, lineHeight: 1.1, fontWeight: 600, letterSpacing: -1, maxWidth: 1040 }}>{title}</div>

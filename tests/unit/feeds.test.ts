@@ -23,6 +23,10 @@ describe('feeds', () => {
     expect(xml).toContain('<atom:link href="https://b.dev/rss.xml" rel="self" type="application/rss+xml"/>');
     expect(xml).toContain('<category>tools</category>');
   });
+  it('escapes special characters in the enclosure url', () => {
+    const xml = buildRss([{ ...post, coverPath: '/uploads/a&b.png' }], s, 'https://b.dev');
+    expect(xml).toContain('url="https://b.dev/uploads/a&amp;b.png"');
+  });
   it('builds JSON Feed 1.1', () => {
     const j = buildJsonFeed([post], s, 'https://b.dev') as { version: string; items: { id: string; url: string; image?: string; tags?: string[] }[] };
     expect(j.version).toBe('https://jsonfeed.org/version/1.1');
