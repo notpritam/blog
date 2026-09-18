@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import { cache } from 'react';
 import { ArticleBody } from '@/components/article/article-body';
 import { ArticleHeader } from '@/components/article/article-header';
 import { MoreWriting } from '@/components/article/more-writing';
@@ -17,16 +18,18 @@ export const dynamic = 'force-dynamic';
 
 type Params = { params: Promise<{ slug: string }> };
 
+const loadPost = cache((slug: string) => getPublishedBySlug(getDb(), slug));
+const loadSettings = cache(() => getSettings(getDb()));
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const db = getDb();
-  const post = getPublishedBySlug(db, slug);
+  const post = loadPost(slug);
   if (!post) return { title: 'Not found', robots: { index: false } };
-  const s = getSettings(db);
+  const s = loadSettings();
   const base = siteUrl();
   const url = `${base}/${post.slug}`;
   const title = post.seoTitle ?? post.title;
-  const description = post.seoDescription ?? post.subtitle ?? post.excerpt;
+  const description = post.seoDescription ?? (post.subtitle || post.excerpt);
   const og = `${base}/og/${post.slug}.png`;
   return {
     title,
@@ -45,13 +48,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function ArticlePage({ params }: Params) {
   const { slug } = await params;
   const db = getDb();
-  const post = getPublishedBySlug(db, slug);
+  const post = loadPost(slug);
   if (!post) {
     const r = getRedirect(db, `/${slug}`);
     if (r) (r.code === 301 ? permanentRedirect : redirect)(r.toPath);
     notFound();
   }
-  const s = getSettings(db);
+  const s = loadSettings();
   const base = siteUrl();
   const url = `${base}/${post.slug}`;
   const { older, newer } = getAdjacent(db, post);

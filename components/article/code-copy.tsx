@@ -12,8 +12,12 @@ export function CodeCopy() {
       btn.textContent = 'Copy';
       btn.setAttribute('aria-label', 'Copy code');
       const onClick = async () => {
-        await navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? pre.innerText);
-        btn.textContent = 'Copied';
+        try {
+          await navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? pre.innerText);
+          btn.textContent = 'Copied';
+        } catch {
+          btn.textContent = 'Copy failed';
+        }
         setTimeout(() => (btn.textContent = 'Copy'), 1500);
       };
       btn.addEventListener('click', onClick);
