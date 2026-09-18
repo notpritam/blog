@@ -6,6 +6,7 @@ import { upsertPost } from '../../lib/posts/write';
 
 export default async function globalSetup() {
   const dir = path.join(process.cwd(), '.e2e-data');
+  fs.rmSync(path.join(dir, 'uploads'), { recursive: true, force: true });
   fs.mkdirSync(path.join(dir, 'uploads'), { recursive: true });
   process.env.BLOG_DATA_DIR = dir;
   const db = openDb(path.join(dir, 'blog.db'));

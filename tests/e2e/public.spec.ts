@@ -27,10 +27,22 @@ test('article renders body, toc, tags, metadata, and BlogPosting json-ld', async
   await expect(page.getByRole('navigation', { name: 'Adjacent posts' }).getByRole('link', { name: 'Second post' })).toBeVisible();
 });
 
-test('drafts are hidden and unknown slugs 404', async ({ page }) => {
-  expect((await page.goto('/hidden-draft'))?.status()).toBe(404);
-  expect((await page.goto('/nope-nope'))?.status()).toBe(404);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('isn’t here');
+test.describe('not found (dev bundles need eval)', () => {
+  // next dev's webpack devtool wraps modules in eval(), which the app's strict CSP
+  // (script-src without 'unsafe-eval', see next.config.ts) blocks in a real browser.
+  // That only breaks client-side module execution in dev mode (verified against a
+  // production build, where the same page renders fine) — it blocks the streaming
+  // reveal script that swaps in the not-found boundary's markup. Scope the CSP bypass
+  // to just this test so the other page-driven tests still exercise the real CSP header
+  // (see the "security and robots headers" test below, which reads it via a raw request
+  // unaffected by this setting either way).
+  test.use({ bypassCSP: true });
+
+  test('drafts are hidden and unknown slugs 404', async ({ page }) => {
+    expect((await page.goto('/hidden-draft'))?.status()).toBe(404);
+    expect((await page.goto('/nope-nope'))?.status()).toBe(404);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('isn’t here');
+  });
 });
 
 test('redirects table issues a 301', async ({ request }) => {
