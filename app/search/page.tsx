@@ -21,7 +21,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         <div className="mt-6 max-w-[560px]"><SearchForm defaultValue={q} autoFocus /></div>
         {q && <p className="mt-4 text-text-soft" aria-live="polite">{results.length} {results.length === 1 ? 'result' : 'results'} for “{q}”</p>}
       </section>
-      {q && <PostGrid posts={results} settings={s} />}
+      {q && <PostGrid posts={results} settings={s} headingLevel="h2" />}
     </div>
   );
 }

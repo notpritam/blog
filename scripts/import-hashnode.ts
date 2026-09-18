@@ -44,11 +44,11 @@ async function main() {
         {
           slug: entry.slug, title, subtitle: entry.subtitle, bodyMd: body, tags: entry.tags,
           coverPath: cover?.path ?? null, coverAlt: entry.coverAlt, coverWidth: cover?.width ?? null, coverHeight: cover?.height ?? null,
-          status: 'published', publishedAt: meta.published, seoDescription: meta.description, createdBy: 'human',
+          status: 'published', publishedAt: meta.published, seoDescription: null, createdBy: 'human',
         },
         { author: 'import:hashnode', note: `Imported from ${HASHNODE_HOST}/${entry.slug}` },
       );
-      if (meta.modified && meta.modified > meta.published) {
+      if (meta.modified && Date.parse(meta.modified) > Date.parse(meta.published)) {
         db.$sqlite.prepare('UPDATE posts SET updated_at = ? WHERE id = ?').run(meta.modified, id);
       } else {
         db.$sqlite.prepare('UPDATE posts SET updated_at = published_at WHERE id = ?').run(id);

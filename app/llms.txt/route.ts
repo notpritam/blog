@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export function GET() {
   const db = getDb();
-  return new Response(buildLlmsTxt(listAllPublished(db), getSettings(db), siteUrl()), {
+  return new Response(buildLlmsTxt(listAllPublished(db, { indexableOnly: true }), getSettings(db), siteUrl()), {
     headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=600' },
   });
 }

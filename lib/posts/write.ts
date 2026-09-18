@@ -30,7 +30,7 @@ export interface WriteOpts { author?: string; note?: string }
 export async function upsertPost(db: Db, input: PostInput, opts: WriteOpts = {}): Promise<number> {
   const rendered = await renderMarkdown(input.bodyMd);
   const now = new Date().toISOString();
-  const existing = db.select({ id: posts.id }).from(posts).where(eq(posts.slug, input.slug)).get();
+  const existing = db.select({ id: posts.id, status: posts.status, publishedAt: posts.publishedAt }).from(posts).where(eq(posts.slug, input.slug)).get();
   const values = {
     title: input.title,
     subtitle: input.subtitle ?? '',
@@ -53,6 +53,11 @@ export async function upsertPost(db: Db, input: PostInput, opts: WriteOpts = {})
     ...(input.featured !== undefined && { featured: input.featured }),
     ...(input.noindex !== undefined && { noindex: input.noindex }),
   };
+  const resultingStatus = input.status ?? existing?.status ?? 'draft';
+  const resultingPublishedAt = input.publishedAt ?? existing?.publishedAt ?? null;
+  if (resultingStatus === 'published' && resultingPublishedAt === null) {
+    values.publishedAt = now;
+  }
   const id = db.transaction((tx) => {
     let id: number;
     if (existing) {

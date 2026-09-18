@@ -100,8 +100,9 @@ export function searchPublished(db: Db, q: string, limit = 20): PostSummary[] {
   return summaries(db, ids.map((id) => byId.get(id)!).filter(Boolean));
 }
 
-export function listAllPublished(db: Db): PostFull[] {
-  const rows = db.select().from(posts).where(published).orderBy(desc(posts.publishedAt)).all();
+export function listAllPublished(db: Db, opts: { indexableOnly?: boolean } = {}): PostFull[] {
+  const where = opts.indexableOnly ? and(published, eq(posts.noindex, false)) : published;
+  const rows = db.select().from(posts).where(where).orderBy(desc(posts.publishedAt)).all();
   const tags = tagsFor(db, rows.map((r) => r.id));
   return rows.map((r) => toFull(r, tags.get(r.id) ?? []));
 }

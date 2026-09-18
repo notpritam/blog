@@ -30,8 +30,12 @@ const g = globalThis as unknown as { __blogDb?: Db };
 
 export function getDb(): Db {
   if (!g.__blogDb) {
+    const file = path.join(dataDir(), 'blog.db');
+    if (process.env.NODE_ENV === 'production' && !fs.existsSync(file) && process.env.BLOG_ALLOW_EMPTY_DB !== '1') {
+      throw new Error(`No database at ${file}. Set BLOG_DATA_DIR to the real data directory, or BLOG_ALLOW_EMPTY_DB=1 to create an empty one.`);
+    }
     fs.mkdirSync(uploadsDir(), { recursive: true });
-    g.__blogDb = openDb(path.join(dataDir(), 'blog.db'));
+    g.__blogDb = openDb(file);
   }
   return g.__blogDb;
 }

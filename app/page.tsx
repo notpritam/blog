@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { JsonLd } from '@/components/seo/json-ld';
 import { FeaturedPost } from '@/components/posts/featured-post';
 import { Pagination } from '@/components/posts/pagination';
@@ -8,6 +9,7 @@ import { websiteJsonLd } from '@/lib/seo/jsonld';
 import { getSettings, siteUrl } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default function Home() {
   const db = getDb();

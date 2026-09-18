@@ -11,7 +11,7 @@ The blog at https://blog.notpritam.in. Next.js 15 + SQLite. Markdown is the sour
     npm run test:e2e         # playwright against a seeded .e2e-data/
     npm run verify           # typecheck + unit + build + e2e
 
-Data lives in `data/` (`blog.db`, `uploads/`), or wherever `BLOG_DATA_DIR` points.
+Data lives in `data/` (`blog.db`, `uploads/`), or wherever `BLOG_DATA_DIR` points. In production, `BLOG_DATA_DIR` must be set to the real data directory (an absolute path) or the app refuses to start with an empty database, unless `BLOG_ALLOW_EMPTY_DB=1` is set.
 
 ## Content
 

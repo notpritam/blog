@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export function GET() {
   const db = getDb();
-  return Response.json(buildJsonFeed(listAllPublished(db), getSettings(db), siteUrl()), {
+  return Response.json(buildJsonFeed(listAllPublished(db, { indexableOnly: true }), getSettings(db), siteUrl()), {
     headers: { 'Content-Type': 'application/feed+json; charset=utf-8', 'Cache-Control': 'public, max-age=600' },
   });
 }

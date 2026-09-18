@@ -25,7 +25,8 @@ function loadAssets() {
     font('@fontsource/inter-tight', 'inter-tight-latin-600-normal.woff'),
     font('@fontsource/jetbrains-mono', 'jetbrains-mono-latin-400-normal.woff'),
     avatarDataUrl(),
-  ]).then(([tight, mono, avatar]) => ({ tight, mono, avatar })));
+  ]).then(([tight, mono, avatar]) => ({ tight, mono, avatar }))
+    .catch((e) => { assets = null; throw e; }));
 }
 
 export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {

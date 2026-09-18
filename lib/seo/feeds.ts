@@ -11,6 +11,9 @@ export function absolutizeHtml(html: string, base: string): string {
 }
 
 export function buildRss(posts: PostFull[], s: Settings, base: string): string {
+  const lastBuildDate = posts.length
+    ? posts.reduce((latest, p) => (Date.parse(p.updatedAt) > Date.parse(latest) ? p.updatedAt : latest), posts[0].updatedAt)
+    : new Date().toISOString();
   const items = posts.map((p) => `
     <item>
       <title>${escapeXml(p.title)}</title>
@@ -30,7 +33,7 @@ export function buildRss(posts: PostFull[], s: Settings, base: string): string {
     <link>${base}</link>
     <description>${escapeXml(s.site_description)}</description>
     <language>en</language>
-    <lastBuildDate>${new Date(posts[0]?.updatedAt ?? Date.now()).toUTCString()}</lastBuildDate>
+    <lastBuildDate>${new Date(lastBuildDate).toUTCString()}</lastBuildDate>
     <atom:link href="${base}/rss.xml" rel="self" type="application/rss+xml"/>
     <image><url>${base}${s.author_avatar}</url><title>${escapeXml(s.site_title)}</title><link>${base}</link></image>${items}
   </channel>

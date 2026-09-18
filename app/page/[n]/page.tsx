@@ -25,7 +25,7 @@ export default async function Paged({ params }: { params: Promise<{ n: string }>
   return (
     <div className="page-wide">
       <section className="dashed-b py-10"><h1 className="h-display text-[28px] font-medium">Older writing · page {page}</h1></section>
-      <PostGrid posts={posts} settings={s} />
+      <PostGrid posts={posts} settings={s} headingLevel="h2" />
       <Pagination page={page} pages={pages} />
     </div>
   );

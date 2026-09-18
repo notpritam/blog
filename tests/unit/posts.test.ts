@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { openDb, type Db } from '@/lib/db/client';
 import { upsertPost } from '@/lib/posts/write';
-import { getAdjacent, getPublishedBySlug, getRedirect, listPublished, listRelated, listTags, searchPublished } from '@/lib/posts/queries';
+import { getAdjacent, getPublishedBySlug, getRedirect, listAllPublished, listPublished, listRelated, listTags, searchPublished } from '@/lib/posts/queries';
 import { redirects } from '@/lib/db/schema';
 import { getSettings, setSetting } from '@/lib/settings';
 import { formatDate, isoDate } from '@/lib/format';
@@ -27,6 +27,21 @@ describe('upsertPost', () => {
     expect(p?.excerpt).toBe('changed');
     const revs = db.$sqlite.prepare('SELECT author, note FROM revisions WHERE post_id = 1 ORDER BY id').all();
     expect(revs).toEqual([{ author: 'human', note: '' }, { author: 'agent:test', note: 'edit' }]);
+  });
+});
+
+describe('upsertPost publishedAt', () => {
+  it('sets publishedAt to now when publishing without an explicit date', async () => {
+    await upsertPost(db, { slug: 'p', title: 'P', bodyMd: 'x', status: 'published' });
+    const p = getPublishedBySlug(db, 'p')!;
+    expect(p.publishedAt).toBeTruthy();
+    expect(Math.abs(Date.now() - Date.parse(p.publishedAt))).toBeLessThan(5000);
+  });
+  it('keeps the original publishedAt when updating an already-published post without passing one', async () => {
+    await upsertPost(db, { slug: 'p2', title: 'P2', bodyMd: 'x', status: 'published', publishedAt: '2026-01-01T00:00:00.000Z' });
+    await upsertPost(db, { slug: 'p2', title: 'P2 updated', bodyMd: 'x2' });
+    const p = getPublishedBySlug(db, 'p2')!;
+    expect(p.publishedAt).toBe('2026-01-01T00:00:00.000Z');
   });
 });
 
@@ -66,6 +81,12 @@ describe('queries', () => {
     db.insert(redirects).values({ fromPath: '/old', toPath: '/a', code: 301 }).run();
     expect(getRedirect(db, '/old')).toEqual({ toPath: '/a', code: 301 });
     expect(getRedirect(db, '/nope')).toBeNull();
+  });
+  it('excludes noindex posts from listAllPublished({ indexableOnly: true }) but not from listPublished', async () => {
+    await upsertPost(db, { slug: 'e', title: 'Epsilon', bodyMd: 'epsilon body', status: 'published', publishedAt: '2026-04-01T00:00:00.000Z', noindex: true });
+    expect(listAllPublished(db).map((p) => p.slug)).toContain('e');
+    expect(listAllPublished(db, { indexableOnly: true }).map((p) => p.slug)).not.toContain('e');
+    expect(listPublished(db, { perPage: 100 }).posts.map((p) => p.slug)).toContain('e');
   });
 });
 

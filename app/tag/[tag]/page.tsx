@@ -30,13 +30,13 @@ export default async function TagPage({ params }: Params) {
   const base = siteUrl();
   return (
     <div className="page-wide">
-      <JsonLd data={collectionPageJsonLd(`Tagged ${t}`, `${base}/tag/${t}`, posts, s, base)} />
+      <JsonLd data={collectionPageJsonLd(`Tagged ${t}`, `${base}/tag/${encodeURIComponent(t)}`, posts, s, base)} />
       <section className="dashed-b py-12">
         <p className="eyebrow">Tag</p>
         <h1 className="h-display mt-2 text-[36px] font-semibold">{t}</h1>
         <p className="mt-2 text-text-soft">{total} {total === 1 ? 'post' : 'posts'}</p>
       </section>
-      <PostGrid posts={posts} settings={s} />
+      <PostGrid posts={posts} settings={s} headingLevel="h2" />
     </div>
   );
 }
