@@ -1,7 +1,7 @@
 import { getDb } from '@/lib/db/client';
 import { fetchToUpload } from '@/lib/media/store';
 import { upsertPost } from '@/lib/posts/write';
-import { collectRemoteImages, extractPageMeta, extractTitle, HASHNODE_HOST, HASHNODE_POSTS, rewriteImages, stripLeadingTitle } from './hashnode';
+import { collectRemoteImages, extractPageMeta, extractTitle, HASHNODE_HOST, HASHNODE_POSTS, normalizeHashnodeImages, rewriteImages, stripLeadingTitle } from './hashnode';
 
 async function text(url: string): Promise<string> {
   const res = await fetch(url, { headers: { 'user-agent': 'blog-importer/1.0' } });
@@ -17,7 +17,7 @@ async function main() {
     if (!title) throw new Error(`No H1 in ${entry.slug}.md`);
     const meta = extractPageMeta(html);
     if (!meta.published) throw new Error(`No datePublished for ${entry.slug}`);
-    let body = stripLeadingTitle(md, title);
+    let body = normalizeHashnodeImages(stripLeadingTitle(md, title));
 
     const map = new Map<string, string>();
     for (const url of collectRemoteImages(body)) {

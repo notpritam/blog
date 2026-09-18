@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractPageMeta, rewriteImages, stripLeadingTitle } from '@/scripts/hashnode';
+import { collectRemoteImages, extractPageMeta, normalizeHashnodeImages, rewriteImages, stripLeadingTitle } from '@/scripts/hashnode';
 
 describe('hashnode helpers', () => {
   it('strips one or two leading H1 lines equal to the title', () => {
@@ -18,5 +18,18 @@ describe('hashnode helpers', () => {
     const md = '![a](https://cdn.hashnode.com/a.png) and ![b](https://cdn.hashnode.com/b.png "t")';
     const out = rewriteImages(md, new Map([['https://cdn.hashnode.com/a.png', '/uploads/2026/09/aa-a.png']]));
     expect(out).toBe('![a](/uploads/2026/09/aa-a.png) and ![b](https://cdn.hashnode.com/b.png "t")');
+  });
+  it('normalizes hashnode image syntax by stripping trailing attributes, keeping alt and url', () => {
+    expect(normalizeHashnodeImages('![a](https://x.png align="center")')).toBe('![a](https://x.png)');
+    expect(normalizeHashnodeImages('![](https://x.png align="center")')).toBe('![](https://x.png)');
+    expect(normalizeHashnodeImages('![a](https://x.png "My Title" align="center")')).toBe('![a](https://x.png "My Title")');
+    expect(normalizeHashnodeImages('![a](https://x.png width="100" align="center")')).toBe('![a](https://x.png)');
+    // Already-standard markdown (no trailing attrs) is left untouched.
+    expect(normalizeHashnodeImages('![a](https://x.png "t")')).toBe('![a](https://x.png "t")');
+    expect(normalizeHashnodeImages('![a](https://x.png)')).toBe('![a](https://x.png)');
+  });
+  it('collects every remote image url regardless of host, deduped', () => {
+    const md = '![a](https://cdn.hashnode.com/a.png) and ![b](https://iili.io/b.png "t") and ![c](https://cdn.jsdelivr.net/gh/x/c.png) and ![a2](https://cdn.hashnode.com/a.png)';
+    expect(collectRemoteImages(md)).toEqual(['https://cdn.hashnode.com/a.png', 'https://iili.io/b.png', 'https://cdn.jsdelivr.net/gh/x/c.png']);
   });
 });

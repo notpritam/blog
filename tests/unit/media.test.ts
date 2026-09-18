@@ -6,7 +6,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { openDb, type Db } from '@/lib/db/client';
 import { media } from '@/lib/db/schema';
-import { saveUpload } from '@/lib/media/store';
+import { fetchToUpload, saveUpload } from '@/lib/media/store';
 
 let dir: string;
 let db: Db;
@@ -71,5 +71,35 @@ describe('saveUpload', () => {
     const b = await saveUpload(db, { buffer, filename: 'a.jpg' });
     expect(a.path).toMatch(/\.jpg$/);
     expect(b.path).toBe(a.path);
+  });
+});
+
+describe('fetchToUpload', () => {
+  it('dedupes repeat fetches of the same source url even when the remote returns different bytes each time', async () => {
+    const backgrounds = ['#000', '#fff'] as const;
+    let calls = 0;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () => {
+      const buffer = await sharp({ create: { width: 4, height: 4, channels: 3, background: backgrounds[calls] } }).png().toBuffer();
+      calls += 1;
+      return {
+        ok: true,
+        arrayBuffer: async () => buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+        headers: { get: () => 'image/png' },
+      } as unknown as Response;
+    }) as typeof fetch;
+
+    try {
+      const a = await fetchToUpload(db, 'https://example.com/cover.png');
+      const b = await fetchToUpload(db, 'https://example.com/cover.png');
+      expect(b.path).toBe(a.path);
+      expect(b.id).toBe(a.id);
+      // The second call must be served from the `source_url` dedupe, not a second download.
+      expect(calls).toBe(1);
+      const row = db.$sqlite.prepare('SELECT source_url FROM media WHERE id = ?').get(a.id);
+      expect(row).toEqual({ source_url: 'https://example.com/cover.png' });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });

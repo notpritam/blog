@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { like } from 'drizzle-orm';
+import { eq, like } from 'drizzle-orm';
 import sharp from 'sharp';
 import { uploadsDir, type Db } from '@/lib/db/client';
 import { media } from '@/lib/db/schema';
@@ -63,7 +63,19 @@ export async function saveUpload(
   return { id: row.id, path: row.path, width: row.width, height: row.height, bytes: row.bytes, mime: row.mime };
 }
 
+/**
+ * Remote CDNs we import from (notably Hashnode's, which is Cloudinary-backed) do not
+ * necessarily return byte-identical content for the same URL on every fetch, so the
+ * content-hash dedupe in `saveUpload` cannot be relied on across re-imports. Dedupe by
+ * source URL first — a repeat import of the same asset should reuse the stored row,
+ * not re-download and mint a second copy — falling back to a fresh download+store
+ * (which still dedupes by content hash within *this* fetch) when the URL is new.
+ */
 export async function fetchToUpload(db: Db, url: string, opts: { alt?: string; createdBy?: string } = {}): Promise<StoredMedia> {
+  const existing = db.select().from(media).where(eq(media.sourceUrl, url)).get();
+  if (existing) {
+    return { id: existing.id, path: existing.path, width: existing.width, height: existing.height, bytes: existing.bytes, mime: existing.mime };
+  }
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Fetch ${url} failed: ${res.status}`);
   const buffer = Buffer.from(await res.arrayBuffer());
@@ -73,5 +85,7 @@ export async function fetchToUpload(db: Db, url: string, opts: { alt?: string; c
     const ext = Object.entries(MIME_BY_EXT).find(([, m]) => m === type)?.[0] ?? '.png';
     filename += ext;
   }
-  return saveUpload(db, { buffer, filename, alt: opts.alt, createdBy: opts.createdBy });
+  const stored = await saveUpload(db, { buffer, filename, alt: opts.alt, createdBy: opts.createdBy });
+  db.$sqlite.prepare('UPDATE media SET source_url = ? WHERE id = ?').run(url, stored.id);
+  return stored;
 }

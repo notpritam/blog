@@ -58,8 +58,24 @@ export function extractTitle(md: string): string | null {
   return m ? m[1].trim() : null;
 }
 
+/**
+ * Hashnode's `.md` export is not CommonMark: every image is written as
+ * `![alt](URL align="center")` (or with other trailing attribute="value" pairs), which
+ * standard markdown parsers read as literal text rather than an `<img>` — the destination
+ * only extends to the first whitespace, so everything after it, including a real `"title"`,
+ * fails to parse as a link title. Strip the non-standard attribute list, keeping the URL
+ * and a leading quoted title if one is present.
+ */
+export function normalizeHashnodeImages(md: string): string {
+  return md.replace(
+    /!\[([^\]]*)\]\((\S+)(?:\s+"([^"]*)")?(?:\s+[a-zA-Z][\w-]*="[^"]*")+\)/g,
+    (_m, alt: string, url: string, title?: string) => (title ? `![${alt}](${url} "${title}")` : `![${alt}](${url})`),
+  );
+}
+
+/** Every image the post depends on, from any remote host — the blog must own all of its own assets. */
 export function collectRemoteImages(md: string): string[] {
-  return [...new Set([...md.matchAll(/!\[[^\]]*\]\((https:\/\/cdn\.hashnode\.com\/[^)\s]+)(?:\s+"[^"]*")?\)/g)].map((m) => m[1]))];
+  return [...new Set([...md.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)(?:\s+"[^"]*")?\)/g)].map((m) => m[1]))];
 }
 
 export function rewriteImages(md: string, map: Map<string, string>): string {

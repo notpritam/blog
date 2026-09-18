@@ -40,7 +40,7 @@ describe('db', () => {
   it('is idempotent across re-open of the same file', () => {
     const db = openDb(':memory:');
     const rows = db.$sqlite.prepare('SELECT name FROM _migrations').all() as { name: string }[];
-    expect(rows.map((r) => r.name)).toEqual(['0001_init']);
+    expect(rows.map((r) => r.name)).toEqual(['0001_init', '0002_media_source_url']);
     db.insert(settings).values({ key: 'site_title', value: 'X' }).run();
     expect(db.select().from(settings).all()).toEqual([{ key: 'site_title', value: 'X' }]);
     expect(db.$sqlite.pragma('foreign_keys', { simple: true })).toBe(1);
@@ -54,14 +54,14 @@ describe('db', () => {
     // First open: runs migrations
     const db1 = openDb(dbPath);
     const rows1 = db1.$sqlite.prepare('SELECT name FROM _migrations').all() as { name: string }[];
-    expect(rows1.map((r) => r.name)).toEqual(['0001_init']);
+    expect(rows1.map((r) => r.name)).toEqual(['0001_init', '0002_media_source_url']);
     db1.insert(settings).values({ key: 'test_key', value: 'test_value' }).run();
     db1.$sqlite.close();
 
     // Second open: should skip migration, data persists
     const db2 = openDb(dbPath);
     const rows2 = db2.$sqlite.prepare('SELECT name FROM _migrations').all() as { name: string }[];
-    expect(rows2.map((r) => r.name)).toEqual(['0001_init']);
+    expect(rows2.map((r) => r.name)).toEqual(['0001_init', '0002_media_source_url']);
     const setting = db2.select().from(settings).where(eq(settings.key, 'test_key')).get();
     expect(setting).toEqual({ key: 'test_key', value: 'test_value' });
     db2.$sqlite.close();

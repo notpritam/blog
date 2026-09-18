@@ -94,6 +94,7 @@ export const media = sqliteTable('media', {
   height: integer('height'),
   bytes: integer('bytes').notNull(),
   mime: text('mime').notNull(),
+  sourceUrl: text('source_url'),
   createdBy: text('created_by').notNull().default('human'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
