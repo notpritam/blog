@@ -158,8 +158,9 @@ Reference measurements captured 2026-09-18 from blog.cloudflare.com at 1440px:
   body at 715px measure: h2 36px/600 with 80px top margin and copy-link
   anchors, h3 24px, code blocks Shiki-highlighted with 1px border and 6px
   radius plus a copy button, tables, callouts (`> [!NOTE]`), images with
-  captions, footnotes. Below: tags, "Previous / Next", "More writing" (3
-  cards). Footer with links and RSS.
+  captions, footnotes. Below: tags, "Previous / Next", "More writing" (2
+  cards, matching the two-column grid; amended after milestone 1). Footer with
+  links and RSS.
 - **Tag `/tag/<tag>`, search `/search?q=`, about `/about`** (author bio from
   settings), `/rss.xml`, `/feed.json`, `/sitemap.xml`, `/robots.txt`,
   `/llms.txt`, `/og/<slug>.png`.
@@ -241,6 +242,15 @@ guide → pick idea or take instruction → draft with Markdown → `seo_check` 
 `submit_for_review` → on "changes requested" read comments, revise, reply,
 resolve → resubmit. Publishing after approval is Pritam's click by default.
 
+**Trust boundary (decided after milestone 1):** the Markdown pipeline allows
+raw HTML and the page renders it unsanitised, and the CSP carries
+`'unsafe-inline'` for the theme-init script and JSON-LD. That is acceptable
+while the only writer is Pritam. Before the first write-capable token or MCP
+tool exists, milestone 3 must add `rehype-sanitize` with an allowlist covering
+what posts actually use (`<br>`, `<details>`, `<kbd>`, images, tables) or move
+to a nonce-based CSP without `'unsafe-inline'`; a leaked token or a
+prompt-injected agent must not be able to store a script.
+
 **Scheduled routine:** `bb automation create --project <id> --name blog-weekly-draft
 --cron "0 9 * * 1" --timezone Asia/Kolkata --prompt "$(cat deploy/automations/weekly-draft.md)"
 --provider claude-code --model <model> --permission-mode auto`. The prompt: connect to the MCP,
@@ -252,8 +262,11 @@ instead and stop. The automation is created once by hand (documented in
 
 ## 10. SEO and performance (out of the box)
 
-- Every public page server-rendered with full HTML; cached in-process and
-  invalidated on publish (`revalidateTag`).
+- Every public page server-rendered with full HTML on every request
+  (`force-dynamic`, `Cache-Control: no-store`). Milestone 1 measured ~30 ms
+  warm renders at four posts, so the in-process cache + `revalidateTag`
+  originally planned here is deferred until it is needed; a publish hook then
+  has one place to invalidate.
 - `generateMetadata` per route: `<title>` ("Post title — Pritam Sharma"),
   description, canonical, `robots`, Open Graph (`article` type,
   published/modified time, author, tags, 1200×630 image), Twitter
@@ -267,7 +280,9 @@ instead and stop. The automation is created once by hand (documented in
   `/feed.json`; `/llms.txt`.
 - OG image per post via `next/og` in the site's type system (title, date,
   author, wordmark); regenerated on publish; cached on disk.
-- Redirects table served by middleware with 301s; the four Hashnode slugs are
+- Redirects table consulted by the article route (`permanentRedirect`, which
+  answers 308); a middleware for arbitrary old paths is deferred to milestone 2
+  if a need appears; the four Hashnode slugs are
   preserved so no redirects are needed for them; `?source=`/tracking params are
   stripped from canonical.
 - Core Web Vitals: self-hosted fonts with `display: swap` and preloaded
@@ -294,6 +309,12 @@ existing portfolio `blog-data.ts` topics, and insert as `published`. Idempotent
 (upsert by slug). Verified by rendering each post and diffing headings against
 the source.
 
+Hashnode's `<meta name="description">` is its own truncated auto-excerpt, so
+the importer does **not** copy it into `seo_description`; the page falls back to
+`subtitle || excerpt`. Every remote image (any host, not only the Hashnode CDN)
+is rehomed, and `media.source_url` (migration 0002) makes re-imports idempotent
+even though the CDN returns different bytes per fetch.
+
 Cutover (Pritam's manual step, documented): change the `blog` A/AAAA records
 from Hashnode (216.198.79.x) to omni (157.180.102.248 / 2a01:4f9:3090:1055::2);
 Caddy issues the certificate on first request. Until then the site is verified
@@ -305,13 +326,18 @@ Follow-up outside this spec: point the portfolio's `lib/hashnode.ts` and
 ## 12. Deployment
 
 - `deploy/systemd/blog.service`: `User=pritam`, `WorkingDirectory=~/personal/apps/blog`,
-  `EnvironmentFile=.env`, `ExecStart=/home/pritam/.nvm/versions/node/v24.20.0/bin/node .next/standalone/server.js`,
+  `EnvironmentFile=.env`, `ExecStart=/home/pritam/.nvm/versions/node/v24.20.0/bin/npx next start -p 8798`
+  (not the standalone bundle: the app resolves `data/`, `public/` and the OG
+  fonts relative to the working directory, and standalone `chdir`s away from it),
   `Environment=PORT=8798 BB_CLI=/home/pritam/bb-server/node_modules/bb-app/host-daemon/dist/bb`,
   `Restart=always`. Plus `blog-backup.timer`.
 - `deploy/apply-caddy.sh`: same guarded pattern as rig — timestamped backup,
   idempotent host block append, verify every other host is still present,
   `caddy validate`, reload.
-- `.env` (mode 600, gitignored; `.env.example` committed): `ADMIN_PASSWORD_HASH`,
+- `.env` (mode 600, gitignored; `.env.example` committed):
+  `BLOG_DATA_DIR=/home/pritam/personal/apps/blog/data` (required in production;
+  `getDb()` refuses to create an empty database when `NODE_ENV=production`
+  unless `BLOG_ALLOW_EMPTY_DB=1`), `ADMIN_PASSWORD_HASH`,
   `SESSION_SECRET`, `SITE_URL=https://blog.notpritam.in`, `INDEXNOW_KEY`,
   `BB_PROJECT_ID`, `BB_PROVIDER`, `BB_MODEL`.
 - `deploy/README.md`: install, build, service, Caddy, DNS cutover, Search
