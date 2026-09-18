@@ -1,4 +1,5 @@
 import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 export const POST_STATUSES = ['draft', 'in_review', 'changes_requested', 'approved', 'published', 'archived'] as const;
 export type PostStatus = (typeof POST_STATUSES)[number];
@@ -31,7 +32,10 @@ export const posts = sqliteTable(
     createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
     updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   },
-  (t) => [index('posts_status_published_idx').on(t.status, t.publishedAt)],
+  (t) => [
+    // Note: SQL index has (status, published_at DESC); see 0001_init.ts
+    index('posts_status_published_idx').on(t.status, t.publishedAt),
+  ],
 );
 
 export const postTags = sqliteTable(
@@ -59,7 +63,7 @@ export const comments = sqliteTable('comments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   postId: integer('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
   revisionId: integer('revision_id').references(() => revisions.id, { onDelete: 'set null' }),
-  parentId: integer('parent_id'),
+  parentId: integer('parent_id').references((): AnySQLiteColumn => comments.id, { onDelete: 'cascade' }),
   author: text('author').notNull(),
   body: text('body').notNull(),
   anchorQuote: text('anchor_quote'),

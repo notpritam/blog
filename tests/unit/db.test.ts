@@ -1,9 +1,20 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { eq, sql } from 'drizzle-orm';
 import { openDb } from '@/lib/db/client';
 import { posts, postTags, settings } from '@/lib/db/schema';
 
 describe('db', () => {
+  const tempDirs: string[] = [];
+  afterEach(() => {
+    for (const dir of tempDirs) {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+    tempDirs.length = 0;
+  });
+
   it('migrates, inserts, and keeps the FTS index in sync', () => {
     const db = openDb(':memory:');
     const inserted = db
@@ -33,6 +44,27 @@ describe('db', () => {
     db.insert(settings).values({ key: 'site_title', value: 'X' }).run();
     expect(db.select().from(settings).all()).toEqual([{ key: 'site_title', value: 'X' }]);
     expect(db.$sqlite.pragma('foreign_keys', { simple: true })).toBe(1);
+  });
+
+  it('skips already-applied migrations on file reopen', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'blog-db-'));
+    tempDirs.push(tmpDir);
+    const dbPath = path.join(tmpDir, 'test.db');
+
+    // First open: runs migrations
+    const db1 = openDb(dbPath);
+    const rows1 = db1.$sqlite.prepare('SELECT name FROM _migrations').all() as { name: string }[];
+    expect(rows1.map((r) => r.name)).toEqual(['0001_init']);
+    db1.insert(settings).values({ key: 'test_key', value: 'test_value' }).run();
+    db1.$sqlite.close();
+
+    // Second open: should skip migration, data persists
+    const db2 = openDb(dbPath);
+    const rows2 = db2.$sqlite.prepare('SELECT name FROM _migrations').all() as { name: string }[];
+    expect(rows2.map((r) => r.name)).toEqual(['0001_init']);
+    const setting = db2.select().from(settings).where(eq(settings.key, 'test_key')).get();
+    expect(setting).toEqual({ key: 'test_key', value: 'test_value' });
+    db2.$sqlite.close();
   });
 
   it('rejects an invalid status', () => {
