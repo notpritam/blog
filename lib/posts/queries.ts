@@ -57,6 +57,19 @@ export function getPublishedBySlug(db: Db, slug: string): PostFull | null {
   return toFull(r, tagsFor(db, [r.id]).get(r.id) ?? []);
 }
 
+/** Any post by slug regardless of status — for the key-protected preview and operator tooling. */
+export function getAnyBySlug(db: Db, slug: string): PostFull | null {
+  const r = db.select().from(posts).where(eq(posts.slug, slug)).get();
+  if (!r) return null;
+  return toFull(r, tagsFor(db, [r.id]).get(r.id) ?? []);
+}
+
+export function listAllPosts(db: Db): PostFull[] {
+  const rows = db.select().from(posts).orderBy(desc(posts.updatedAt)).all();
+  const tags = tagsFor(db, rows.map((r) => r.id));
+  return rows.map((r) => toFull(r, tags.get(r.id) ?? []));
+}
+
 export function getAdjacent(db: Db, post: PostSummary): { older: PostSummary | null; newer: PostSummary | null } {
   const older = db.select().from(posts).where(and(published, lt(posts.publishedAt, post.publishedAt))).orderBy(desc(posts.publishedAt)).limit(1).get();
   const newer = db.select().from(posts).where(and(published, gt(posts.publishedAt, post.publishedAt))).orderBy(asc(posts.publishedAt)).limit(1).get();
