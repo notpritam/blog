@@ -4,49 +4,10 @@ test('home shows featured post, grid, and WebSite json-ld', async ({ page }) => 
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pritam Sharma');
   await expect(page.locator('article')).toHaveCount(2);
-  await expect(page.locator('article').first().getByRole('heading', { name: 'Second post' })).toBeVisible();
+  await expect(page.locator('article').first().getByRole('link', { name: 'Second post' })).toBeVisible();
   const ld = await page.locator('script[type="application/ld+json"]').first().textContent();
   expect(ld).toContain('"@type":"WebSite"');
   await expect(page.locator('html')).toHaveAttribute('data-theme', /light|dark/);
-});
-
-test.describe('editorial themes and navigation', () => {
-  // Dev's eval-based bundles need this; production is also checked without a CSP bypass.
-  test.use({ bypassCSP: true });
-
-  test('theme selection survives navigation and reload without changing the layout', async ({ page }) => {
-    await page.emulateMedia({ colorScheme: 'light' });
-    await page.goto('/');
-    const cover = page.locator('.editorial-cover');
-    const lightBounds = await cover.boundingBox();
-    await page.getByRole('button', { name: 'Switch to dark theme' }).click();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    expect(await cover.boundingBox()).toEqual(lightBounds);
-    await page.locator('#featured-title a').click();
-    // The first article navigation compiles this route on the dev server.
-    await page.waitForURL('**/second-post');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Second post');
-    await expect(page.locator('.site-header')).not.toHaveClass(/site-header-home/);
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    await page.reload();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Writing' }).click();
-    await expect(page.locator('.site-header')).toHaveClass(/site-header-home/);
-    await page.getByRole('button', { name: 'Switch to light theme' }).click();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  });
-
-  test('narrow screens retain readable navigation and all stories without overflow', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 740 });
-    await page.goto('/');
-    await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
-    await expect(page.getByRole('navigation', { name: 'Selected stories' }).getByRole('link', { name: 'First post about llamas' })).toBeVisible();
-    await expect(page.locator('.post-grid article')).toHaveCount(1);
-    const dimensions = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
-    expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport);
-    await page.getByRole('link', { name: 'Search', exact: true }).click();
-    await expect(page.getByRole('searchbox', { name: 'Search' })).toBeVisible();
-  });
 });
 
 test('article renders body, toc, tags, metadata, and BlogPosting json-ld', async ({ page }) => {
