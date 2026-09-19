@@ -13,6 +13,9 @@ const csp = [
 ].join('; ');
 
 const nextConfig: NextConfig = {
+  // `next dev` and `next build` would otherwise share .next and corrupt each other
+  // when the dev server runs while production is rebuilt.
+  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   serverExternalPackages: ['better-sqlite3', 'shiki', '@shikijs/rehype'],
   images: {
     formats: ['image/avif', 'image/webp'],
