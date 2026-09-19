@@ -93,5 +93,6 @@ npm run cli -- setting get site_title
 npm run cli -- setting set site_tagline "…"
 npm run cli -- redirect add /tag/reactjs /tag/react
 npm run cli -- redirect list
+npm run cli -- post feature <slug>      # home-page hero (newest post if none is flagged)
 npm run backup
 ```
