@@ -44,3 +44,6 @@
 .toc-nav a { display: block; padding: 5px 0 5px 12px; border-left: 1px dashed var(--line); font-size: 13px; line-height: 18px; color: var(--meta); }
 .toc-nav a[data-depth="3"] { padding-left: 24px; }
 .toc-nav a:hover, .toc-nav a[aria-current="true"] { color: var(--ink); border-left-color: var(--ink); }
+
+.mermaid-figure { margin: 0; overflow-x: auto; padding: 20px; border: 1px dashed var(--line); background: var(--bg-muted); }
+.mermaid-figure svg { max-width: 100%; height: auto; margin: 0 auto; display: block; }

@@ -79,6 +79,15 @@ export function normalizeHashnodeImages(md: string): string {
  * literal `)` inside the URL itself isn't mistaken for the closing paren of the markdown
  * image syntax, which would otherwise truncate the captured URL.
  */
+/** Hashnode's `%[url]` embed shorthand → a thumbnail link for YouTube, a plain link otherwise. */
+export function normalizeHashnodeEmbeds(md: string): string {
+  return md.replace(/^%\[(\S+?)\]\s*$/gm, (_m, url: string) => {
+    const yt = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/.exec(url);
+    if (yt) return `[![Watch on YouTube](https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg "Watch on YouTube")](${url})`;
+    return `[${url}](${url})`;
+  });
+}
+
 export function collectRemoteImages(md: string): string[] {
   return [
     ...new Set(

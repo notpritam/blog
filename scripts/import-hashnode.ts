@@ -1,7 +1,7 @@
 import { getDb } from '@/lib/db/client';
 import { fetchToUpload } from '@/lib/media/store';
 import { upsertPost } from '@/lib/posts/write';
-import { collectRemoteImages, extractPageMeta, extractTitle, HASHNODE_HOST, HASHNODE_POSTS, normalizeHashnodeImages, rewriteImages, stripLeadingTitle } from './hashnode';
+import { collectRemoteImages, extractPageMeta, extractTitle, HASHNODE_HOST, HASHNODE_POSTS, normalizeHashnodeEmbeds, normalizeHashnodeImages, rewriteImages, stripLeadingTitle } from './hashnode';
 
 function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
@@ -23,7 +23,7 @@ async function main() {
       if (!title) throw new Error(`No H1 in ${entry.slug}.md`);
       const meta = extractPageMeta(html);
       if (!meta.published) throw new Error(`No datePublished for ${entry.slug}`);
-      let body = normalizeHashnodeImages(stripLeadingTitle(md, title));
+      let body = normalizeHashnodeEmbeds(normalizeHashnodeImages(stripLeadingTitle(md, title)));
 
       const map = new Map<string, string>();
       for (const url of collectRemoteImages(body)) {

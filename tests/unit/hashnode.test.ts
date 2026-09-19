@@ -45,3 +45,13 @@ describe('hashnode helpers', () => {
     expect(rewriteImages(md, map)).toBe('![a](/uploads/a.png) and ![b](/uploads/b.png)');
   });
 });
+
+describe('normalizeHashnodeEmbeds', () => {
+  it('turns a YouTube embed shorthand into a thumbnail link and other urls into links', async () => {
+    const { normalizeHashnodeEmbeds } = await import('@/scripts/hashnode');
+    expect(normalizeHashnodeEmbeds('a\n%[https://youtu.be/tyb62Z6wkFM] \nb')).toBe(
+      'a\n[![Watch on YouTube](https://img.youtube.com/vi/tyb62Z6wkFM/hqdefault.jpg "Watch on YouTube")](https://youtu.be/tyb62Z6wkFM)\nb',
+    );
+    expect(normalizeHashnodeEmbeds('%[https://example.com/x]')).toBe('[https://example.com/x](https://example.com/x)');
+  });
+});
