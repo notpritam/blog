@@ -15,17 +15,25 @@ export default function Home() {
   const db = getDb();
   const s = getSettings(db);
   const featured = getFeatured(db);
-  const { posts: rest, page, pages } = listPublished(db, { page: 1, perPage: Number(s.posts_per_page) || 10, excludeId: featured?.id });
+  const { posts: rest, total, page, pages } = listPublished(db, { page: 1, perPage: Number(s.posts_per_page) || 10, excludeId: featured?.id });
   return (
-    <div className="page-wide">
+    <div className="editorial-home">
       <JsonLd data={websiteJsonLd(s, siteUrl())} />
-      <section className="dashed-b py-16">
-        <h1 className="h-display text-[36px] font-semibold leading-[1.15]">{s.site_title}</h1>
-        <p className="mt-3 max-w-[60ch] text-[18px] leading-[27px] text-text-soft">{s.site_tagline}</p>
-      </section>
-      {featured ? <FeaturedPost post={featured} settings={s} /> : <p className="py-16 text-text-soft">No posts yet.</p>}
-      {rest.length > 0 && <PostGrid posts={rest} settings={s} />}
-      {featured && <Pagination page={page} pages={pages} />}
+      {featured ? <FeaturedPost post={featured} selections={rest.slice(0, 3)} total={total + 1} settings={s} /> : (
+        <section className="editorial-empty"><h1 className="h-display">{s.site_title}</h1><p>{s.site_tagline}</p><p>No posts yet. Check back soon.</p></section>
+      )}
+      {rest.length > 0 && (
+        <section className="writing-archive" aria-labelledby="writing-title">
+          <div className="page-wide">
+            <div className="archive-heading dashed-b">
+              <div><p className="editorial-section-label">The rest of the notebook</p><h2 id="writing-title">More writing<span className="archive-count">/{String(total).padStart(2, '0')}</span></h2></div>
+              <p>{s.site_tagline}</p>
+            </div>
+            <PostGrid posts={rest} settings={s} />
+            <Pagination page={page} pages={pages} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

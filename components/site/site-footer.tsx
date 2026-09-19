@@ -10,7 +10,7 @@ export function SiteFooter({ settings: s }: { settings: Settings }) {
     { href: s.author_url, label: 'Portfolio' },
   ].filter(Boolean) as { href: string; label: string }[];
   return (
-    <footer className="dashed-t mt-24 bg-bg-muted">
+    <footer className="site-footer dashed-t bg-bg">
       <div className="page-wide grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <p className="h-display text-[20px] font-medium">{s.site_title}</p>
