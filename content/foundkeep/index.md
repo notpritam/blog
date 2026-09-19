@@ -4,7 +4,7 @@ subtitle: A private library for pages, screenshots, highlights and threads that 
 slug: bookmarks-forget-why-you-saved-them-so-i-built-foundkeep
 tags: [foundkeep, agents, tools]
 cover: ./cover.webp
-cover_alt: The FoundKeep web library: a search box, type filters and a grid of saved images, highlights and notes
+cover_alt: The FoundKeep library: sidebar with collections, mind map and agents, and a masonry of saved bookmarks and notes with tags
 ---
 
 I have a folder called "read later" in every browser I have ever used. None of them helped me read anything later.
@@ -31,8 +31,6 @@ The same goes for the other kinds of things people hoard:
 
 ![The Chrome extension's sidebar: the current page with Save page, Highlight, Region and Full page actions above your library](./extension-sidebar.webp "The extension lives in Chrome's side panel: capture on top, your library underneath.")
 
-![The iPhone app: the gallery of finds with type filters, and a saved item with its summary, folder and tags](./iphone.webp "The iPhone app. Share sheet in, gallery out. The same library as the browser.")
-
 Every capture lands in the browser's local storage first and syncs to your account afterwards. If the network is down when you hit save, the save still happens.
 
 * * *
@@ -47,9 +45,11 @@ The second is hosted AI processing, and it is off until you turn it on. When you
 
 Tags come in two sets: the ones the machine suggested and the ones you typed. Yours win. Folders are separate from tags, and a save sits in exactly one folder. You can also link two saves by hand, and the links form a graph where clusters and hubs start to show up on their own.
 
+![The mind map: saves and tags as nodes, links between them drawn as lines](./mind-map.webp "The mind map. Fifteen saves, fourteen tags, thirty links, and the shape of what you have been reading.")
+
 ![Review your save: destination, title, a personal note, folder and tags before it is stored](./extension-save-review.webp "Every save gets a review step: where it goes, what it is called, and the note you will thank yourself for later.")
 
-![A saved bookmark open in the web reader with its note and a list of connected saves](./reader.webp "A save in the reader. Connected saves are the links you made and the tags you share.")
+![A saved bookmark opened over the library: title, source, your note, and the connected saves](./reader.webp "A save opened in place. Connected saves are the links you made plus the ones you share a tag with.")
 
 Search covers titles, notes, summaries, OCR text and the extracted article. It is keyword search. I have not bolted embeddings onto it and I am not going to claim semantic anything until it earns the word.
 
@@ -59,7 +59,9 @@ Search covers titles, notes, summaries, OCR text and the extracted article. It i
 
 Folders are for you. Collections are the shareable layer: a group of saves with a visibility setting, a list of who can add to it, and, if you want, an approval step for submissions. Public collections can be browsed without an account. Members build them, followers watch them.
 
-![A public collection page: 27 finds with a curator, followers, search and a masonry of notes and images](./collection.webp "A public collection. Anyone can browse it; members add to it.")
+![Your collections: three public ones and a private scratchpad, each with tags and follower counts](./collections.webp "Collections you curate or follow.")
+
+![A public collection page with a pending suggestion waiting for the curator's approval](./collection-public.webp "A public collection, seen by its curator: a contributor's suggestion is waiting for approval.")
 
 * * *
 
