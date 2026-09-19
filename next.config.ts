@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
   // `next dev` and `next build` would otherwise share .next and corrupt each other
   // when the dev server runs while production is rebuilt.
   distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
+  // Next 15 streams generateMetadata output into <body> for most user agents and only
+  // blocks (renders it in <head>) for a bot shortlist. A blog lives on its <head>
+  // metadata, so treat every agent as such: title, description, canonical, OG and
+  // Twitter tags are always in the initial <head>.
+  htmlLimitedBots: /.*/,
   serverExternalPackages: ['better-sqlite3', 'shiki', '@shikijs/rehype'],
   images: {
     formats: ['image/avif', 'image/webp'],
