@@ -15,7 +15,7 @@ Data lives in `data/` (`blog.db`, `uploads/`), or wherever `BLOG_DATA_DIR` point
 
 ## Content
 
-    npm run import:hashnode  # idempotent: pulls the four Hashnode posts, rehomes images
+    npm run import:hashnode  # historical: the Hashnode source redirected to this blog after the DNS cutover (Sept 2026); the script now refuses to run
     npm run rerender         # re-run the markdown pipeline over every post
 
 ## Routes

@@ -1,4 +1,5 @@
 import { getDb } from '@/lib/db/client';
+import { siteUrl } from '@/lib/settings';
 import { fetchToUpload } from '@/lib/media/store';
 import { upsertPost } from '@/lib/posts/write';
 import { collectRemoteImages, extractPageMeta, extractTitle, HASHNODE_HOST, HASHNODE_POSTS, normalizeHashnodeEmbeds, normalizeHashnodeImages, rewriteImages, stripLeadingTitle } from './hashnode';
@@ -10,6 +11,12 @@ function errorMessage(e: unknown): string {
 async function text(url: string): Promise<string> {
   const res = await fetch(url, { headers: { 'user-agent': 'blog-importer/1.0' }, signal: AbortSignal.timeout(30_000) });
   if (!res.ok) throw new Error(`${url} → ${res.status}`);
+  // Since the DNS cutover, blog.notpritam.in (and Hashnode's redirects to it) resolve to THIS
+  // blog. Importing from ourselves would replace the original covers with our own OG cards.
+  const ours = new URL(siteUrl()).host;
+  if (new URL(res.url).host === ours) {
+    throw new Error(`${url} resolved to ${res.url}, which is this blog, not Hashnode. The Hashnode source no longer exists; this importer is historical.`);
+  }
   return res.text();
 }
 
