@@ -1,0 +1,6 @@
+# Blog — reverse proxy for blog.notpritam.in -> the Next.js server on :8798.
+# Managed by ~/personal/apps/blog/deploy/apply-caddy.sh (idempotent, guarded).
+blog.notpritam.in {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8798
+}

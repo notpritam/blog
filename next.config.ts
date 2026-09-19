@@ -20,7 +20,11 @@ const nextConfig: NextConfig = {
     imageSizes: [28, 36, 64, 128, 256, 465, 715],
   },
   async rewrites() {
-    return [{ source: '/:slug.md', destination: '/md/:slug' }];
+    return [
+      { source: '/:slug.md', destination: '/md/:slug' },
+      // IndexNow key file: https://blog.notpritam.in/<32-hex-key>.txt
+      { source: '/:key([a-f0-9]{32}).txt', destination: '/indexnow/:key' },
+    ];
   },
   async headers() {
     return [

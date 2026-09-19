@@ -1,0 +1,24 @@
+[Unit]
+Description=Blog — blog.notpritam.in (Next.js + SQLite)
+After=network.target
+
+[Service]
+Type=simple
+User=pritam
+Group=pritam
+# Not the standalone bundle: data/, public/ and the OG fonts under node_modules
+# are resolved from the working directory (see docs/superpowers/specs, §12).
+WorkingDirectory=/home/pritam/personal/apps/blog
+EnvironmentFile=/home/pritam/personal/apps/blog/.env
+Environment=NODE_ENV=production
+ExecStart=/home/pritam/.nvm/versions/node/v24.20.0/bin/node node_modules/next/dist/bin/next start -p 8798
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

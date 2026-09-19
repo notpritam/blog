@@ -24,3 +24,5 @@ Data lives in `data/` (`blog.db`, `uploads/`), or wherever `BLOG_DATA_DIR` point
 `/rss.xml`, `/feed.json`, `/sitemap.xml`, `/robots.txt`, `/llms.txt`, `/og/<slug>.png`, `/uploads/…`.
 
 Design and plans: `docs/superpowers/`.
+
+Deploy (systemd + shared Caddy on omni, port 8798): `deploy/README.md`.

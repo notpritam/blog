@@ -1,0 +1,10 @@
+[Unit]
+Description=Blog — nightly SQLite backup into data/backups (keeps 14)
+
+[Service]
+Type=oneshot
+User=pritam
+Group=pritam
+WorkingDirectory=/home/pritam/personal/apps/blog
+EnvironmentFile=/home/pritam/personal/apps/blog/.env
+ExecStart=/home/pritam/.nvm/versions/node/v24.20.0/bin/node node_modules/tsx/dist/cli.mjs scripts/cli.ts backup 14

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { PostGrid } from '@/components/posts/post-grid';
 import { JsonLd } from '@/components/seo/json-ld';
 import { getDb } from '@/lib/db/client';
-import { listPublished } from '@/lib/posts/queries';
+import { getRedirect, listPublished } from '@/lib/posts/queries';
 import { collectionPageJsonLd } from '@/lib/seo/jsonld';
 import { getSettings, siteUrl } from '@/lib/settings';
 
@@ -25,7 +25,12 @@ export default async function TagPage({ params }: Params) {
   const t = normalizeTag(tag);
   const db = getDb();
   const { posts, total } = listPublished(db, { tag: t, perPage: 100 });
-  if (total === 0) notFound();
+  if (total === 0) {
+    // Old tag slugs (e.g. Hashnode's) can be mapped in the redirects table.
+    const r = getRedirect(db, `/tag/${t}`);
+    if (r) (r.code === 301 ? permanentRedirect : redirect)(r.toPath);
+    notFound();
+  }
   const s = getSettings(db);
   const base = siteUrl();
   return (
