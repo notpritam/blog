@@ -101,3 +101,19 @@ describe('settings and format', () => {
     expect(isoDate('2026-09-15T10:00:00.000Z')).toBe('2026-09-15');
   });
 });
+
+describe('featured post', () => {
+  it('falls back to the newest published post, honours the flag, and excludes it from listings', async () => {
+    const { getFeatured } = await import('@/lib/posts/queries');
+    expect(getFeatured(db)?.slug).toBe('c');
+    db.$sqlite.prepare("UPDATE posts SET featured = 1 WHERE slug = 'a'").run();
+    const f = getFeatured(db)!;
+    expect(f.slug).toBe('a');
+    expect(f.featured).toBe(true);
+    const rest = listPublished(db, { perPage: 10, excludeId: f.id });
+    expect(rest.posts.map((p) => p.slug)).toEqual(['c', 'b']);
+    expect(rest.total).toBe(2);
+    db.$sqlite.prepare("UPDATE posts SET featured = 1 WHERE slug = 'd'").run(); // a draft: never featured on the home page
+    expect(getFeatured(db)?.slug).toBe('a');
+  });
+});

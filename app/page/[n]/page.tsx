@@ -3,7 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { Pagination } from '@/components/posts/pagination';
 import { PostGrid } from '@/components/posts/post-grid';
 import { getDb } from '@/lib/db/client';
-import { listPublished } from '@/lib/posts/queries';
+import { getFeatured, listPublished } from '@/lib/posts/queries';
 import { getSettings } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,8 @@ export default async function Paged({ params }: { params: Promise<{ n: string }>
   if (page === 1) permanentRedirect('/');
   const db = getDb();
   const s = getSettings(db);
-  const { posts, pages } = listPublished(db, { page, perPage: Number(s.posts_per_page) || 10 });
+  const featured = getFeatured(db);
+  const { posts, pages } = listPublished(db, { page, perPage: Number(s.posts_per_page) || 10, excludeId: featured?.id });
   if (posts.length === 0) notFound();
   return (
     <div className="page-wide">

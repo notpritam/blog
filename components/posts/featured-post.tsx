@@ -3,13 +3,13 @@ import Link from 'next/link';
 import type { PostSummary } from '@/lib/posts/types';
 import type { Settings } from '@/lib/settings';
 import { AuthorChip } from './author-chip';
-import { PostDate } from './post-date';
+import { formatDate } from '@/lib/format';
 
 export function FeaturedPost({ post, settings }: { post: PostSummary; settings: Settings }) {
   return (
     <article className="dashed-b grid gap-8 py-12 md:grid-cols-[minmax(0,1fr)_465px] md:items-center">
       <div>
-        <PostDate iso={post.publishedAt} />
+        <p className="eyebrow">{post.featured && <span className="text-accent">Featured · </span>}<time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time></p>
         <h2 className="h-display mt-4 text-[28px] font-medium leading-[1.25]">
           <Link href={`/${post.slug}`} className="link-hover">{post.title}</Link>
         </h2>

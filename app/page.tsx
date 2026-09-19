@@ -4,7 +4,7 @@ import { FeaturedPost } from '@/components/posts/featured-post';
 import { Pagination } from '@/components/posts/pagination';
 import { PostGrid } from '@/components/posts/post-grid';
 import { getDb } from '@/lib/db/client';
-import { listPublished } from '@/lib/posts/queries';
+import { getFeatured, listPublished } from '@/lib/posts/queries';
 import { websiteJsonLd } from '@/lib/seo/jsonld';
 import { getSettings, siteUrl } from '@/lib/settings';
 
@@ -14,8 +14,8 @@ export const metadata: Metadata = { alternates: { canonical: '/' } };
 export default function Home() {
   const db = getDb();
   const s = getSettings(db);
-  const { posts, page, pages } = listPublished(db, { page: 1, perPage: Number(s.posts_per_page) || 10 });
-  const [featured, ...rest] = posts;
+  const featured = getFeatured(db);
+  const { posts: rest, page, pages } = listPublished(db, { page: 1, perPage: Number(s.posts_per_page) || 10, excludeId: featured?.id });
   return (
     <div className="page-wide">
       <JsonLd data={websiteJsonLd(s, siteUrl())} />

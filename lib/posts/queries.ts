@@ -37,7 +37,7 @@ function summaries(db: Db, rows: Row[]): PostSummary[] {
 
 const published = eq(posts.status, 'published');
 
-export function listPublished(db: Db, opts: { page?: number; perPage?: number; tag?: string } = {}) {
+export function listPublished(db: Db, opts: { page?: number; perPage?: number; tag?: string; excludeId?: number } = {}) {
   const page = Math.max(1, opts.page ?? 1);
   const perPage = Math.max(1, opts.perPage ?? 10);
   let idsInTag: number[] | null = null;
@@ -45,10 +45,23 @@ export function listPublished(db: Db, opts: { page?: number; perPage?: number; t
     idsInTag = db.select({ id: postTags.postId }).from(postTags).where(eq(postTags.tag, opts.tag)).all().map((r) => r.id);
     if (idsInTag.length === 0) return { posts: [], total: 0, page, pages: 0 };
   }
-  const where = idsInTag ? and(published, inArray(posts.id, idsInTag)) : published;
+  const conds = [published];
+  if (idsInTag) conds.push(inArray(posts.id, idsInTag));
+  if (opts.excludeId !== undefined) conds.push(ne(posts.id, opts.excludeId));
+  const where = and(...conds);
   const total = db.select({ n: count() }).from(posts).where(where).get()?.n ?? 0;
   const rows = db.select().from(posts).where(where).orderBy(desc(posts.publishedAt), desc(posts.id)).limit(perPage).offset((page - 1) * perPage).all();
   return { posts: summaries(db, rows), total, page, pages: Math.ceil(total / perPage) };
+}
+
+/**
+ * The hero post for the home page: the most recently published post flagged `featured`,
+ * or the newest published post when nothing is flagged.
+ */
+export function getFeatured(db: Db): PostSummary | null {
+  const flagged = db.select().from(posts).where(and(published, eq(posts.featured, true))).orderBy(desc(posts.publishedAt), desc(posts.id)).limit(1).get();
+  const r = flagged ?? db.select().from(posts).where(published).orderBy(desc(posts.publishedAt), desc(posts.id)).limit(1).get();
+  return r ? summaries(db, [r])[0] : null;
 }
 
 export function getPublishedBySlug(db: Db, slug: string): PostFull | null {

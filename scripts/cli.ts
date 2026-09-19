@@ -10,6 +10,7 @@
  *   npm run cli -- post list
  *   npm run cli -- post status <slug> <draft|in_review|changes_requested|approved|published|archived>
  *   npm run cli -- post publish <slug>
+ *   npm run cli -- post feature <slug> | post unfeature <slug>   (the home page hero; newest wins if none)
  *
  * `post import` reads YAML-ish front matter (title, subtitle, slug, tags, cover, cover_alt,
  * seo_description, status) and uploads local images referenced relative to the file.
@@ -160,6 +161,19 @@ async function main() {
     if (!post) throw new Error(`No post with slug ${slug}`);
     await upsertPost(db, { slug, title: post.title, subtitle: post.subtitle, excerpt: post.excerpt, bodyMd: post.bodyMd, status, ...(status === 'published' && !post.publishedAt && { publishedAt: new Date().toISOString() }) }, { author: 'human', note: `status → ${status}` });
     console.log(`✓ ${slug} → ${status}${status === 'published' ? `  ${process.env.SITE_URL ?? ''}/${slug}` : ''}`);
+    return;
+  }
+  if (group === 'post' && (cmd === 'feature' || cmd === 'unfeature') && rest[0]) {
+    const post = getAnyBySlug(db, rest[0]);
+    if (!post) throw new Error(`No post with slug ${rest[0]}`);
+    if (cmd === 'feature') {
+      db.$sqlite.prepare('UPDATE posts SET featured = 0 WHERE featured = 1').run();
+      db.$sqlite.prepare('UPDATE posts SET featured = 1 WHERE id = ?').run(post.id);
+      console.log(`✓ ${post.slug} is now the featured post${post.status !== 'published' ? ' (it will show once published)' : ''}`);
+    } else {
+      db.$sqlite.prepare('UPDATE posts SET featured = 0 WHERE id = ?').run(post.id);
+      console.log(`✓ ${post.slug} unfeatured; the newest published post is the hero again`);
+    }
     return;
   }
   if (group === 'backup') {
