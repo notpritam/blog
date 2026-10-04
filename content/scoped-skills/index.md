@@ -1,6 +1,6 @@
 ---
 title: My agents don't all need the same skills, so I made bb stop handing them out
-subtitle: Scoped Skills gives a skill only to the agents and models that can use it. It started as a cleanup and ended as a plugin, and the part that decides who gets what is about twenty lines.
+subtitle: Scoped Skills gives a skill only to the agents and models that can use it. It started as a cleanup and ended as a plugin, and the part that decides who gets what is a few dozen lines.
 slug: scoped-skills
 tags: [bb, agents, plugins, skills]
 cover: ./architecture.webp
@@ -70,9 +70,9 @@ So the source of truth is the plugin's SQLite database: one table for skills and
 
 ## Three things I learned migrating 50-odd skills
 
-**bb parses frontmatter strictly, and it doesn't tell you.** One of my skills had `description: … feedback and motion: adding hover states …`. The unquoted `: ` is invalid YAML. Claude Code didn't care, so I'd never noticed, but bb left the skill out without a word. Scoped Skills' import uses a strict YAML parser on purpose, so it rejects that file with the reason and the fix (quote it, or use `description: >-`).
+**bb parses frontmatter strictly, and it doesn't tell you.** One of my skills had `description: … feedback and motion: adding hover states …`. The unquoted `: ` is invalid YAML. Claude Code didn't care, so I'd never noticed, but bb left the skill out without a word. It got me twice: `handoff` had the same problem (`…the current machine: "moving to the VM"…`). Because an identical copy also sat in `~/.claude/skills`, I first blamed the duplicate. Deleting the duplicate changed nothing; quoting the description fixed it. Scoped Skills' import uses a strict YAML parser on purpose, so it rejects such a file with the reason and the fix (quote it, or use `description: >-`).
 
-**A duplicate can hide your copy.** I had `handoff` in both `~/.bb/skills` and `~/.claude/skills`, identical. bb only showed the Claude copy. Moving a skill means *moving* it: import it, check it, then delete the old copies.
+**Skills that point at themselves break when they move.** Two of mine ran their own scripts through `~/.claude/skills/<name>/…`. Once a skill lives somewhere else, those paths go nowhere. Grep for the old path before you delete anything.
 
 **Prefer the registry when there is one.** For anything that originally came from skills.sh, `bb skill install <id>` beats copying files, because bb records where the skill came from. Two of mine had disappeared upstream, and the registry was out of date about that, so those were the only ones I copied by hand.
 
@@ -100,6 +100,8 @@ bb scoped-skills preview --agent claude-code --model claude-opus-5-5
 
 and as agent tools, so you can tell a thread "make brandkit Codex-only" and it does it.
 
+**Update, October 5:** v0.2 adds project scopes. Each entry is a glob matched against a project's name, id or git remote, so my work skills now carry `--projects '*emergentbase/*,work'`. They reach every agent, but only in work repos, and never in my personal projects.
+
 * * *
 
 ## Did it work?
@@ -121,11 +123,12 @@ Same machine, same skill folders. The shared skills reach both, and the image sk
 - A scope change applies to new sessions. A thread that's already running keeps the skills it started with.
 - A copy of the same skill left in `~/.bb/skills`, `~/.claude/skills` or `~/.codex/skills` still reaches every agent and defeats the scope.
 - Models are matched as bb reports them, so globs (`gpt-5*`, `claude-opus-*`) hold up better than exact version strings.
+- A project-scoped skill never reaches a thread whose project doesn't match, including a thread with no project.
 
 ## Try it
 
 ```sh
-bb plugin install git:github.com/notpritam/bb-plugin-scoped-skills@^0.1.0
+bb plugin install git:github.com/notpritam/bb-plugin-scoped-skills@^0.2.0
 ```
 
-The source is on [GitHub](https://github.com/notpritam/bb-plugin-scoped-skills) under MIT. It's about 1,100 lines of TypeScript: roughly 500 for the server, CLI and tools, 360 for the page, and 200 for the library logic.
+The source is on [GitHub](https://github.com/notpritam/bb-plugin-scoped-skills) under MIT. It's about 1,200 lines of TypeScript: roughly 590 for the server, CLI and tools, 420 for the page, and 230 for the library logic.
