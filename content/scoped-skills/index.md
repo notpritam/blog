@@ -80,15 +80,15 @@ So the source of truth is the plugin's SQLite database: one table for skills and
 
 ## What it looks like
 
-There's a Scoped Skills page in the sidebar. Every skill shows its agent toggles and a model field, and a preview at the top answers "what would a thread on this agent and model get?"
+There's a Scoped Skills page in the sidebar, laid out like bb's own Skills pages. Each skill is a row with its scope shown as badges. **Preview** answers "what would a thread on this agent, model and project get?":
 
-![Scoped Skills previewing a Codex thread on o4-mini: four image skills included, a GPT-5-only demo skill withheld](./library-codex.webp)
+![The library previewed as a Codex thread on o4-mini in FoundKeep: five skills get it, a GPT-5-only demo skill is withheld](./library.webp)
 
-Switch the preview to Claude Code and every scoped skill is withheld:
+Click a skill to change who gets it. Agents are picked by logo; models and projects are chips. A project glob tells you right away which of your projects it matches, so a typo that would silently match nothing is obvious:
 
-![The same library previewed for Claude Code: 0 of 5 skills included](./preview-claude-code.webp)
+![A skill's page: every agent, any model, a FoundKeep project glob matching one project, and the rendered SKILL.md](./skill-page.webp)
 
-(`gpt5-prompting` is a demonstration skill I made for these screenshots. The other four are real.)
+(`foundkeep-conventions` and `gpt5-prompting` are demonstration skills I made for these screenshots. The image skills are real.)
 
 The same operations exist as a CLI:
 
@@ -100,7 +100,7 @@ bb scoped-skills preview --agent claude-code --model claude-opus-5-5
 
 and as agent tools, so you can tell a thread "make brandkit Codex-only" and it does it.
 
-**Update, October 5:** v0.2 adds project scopes. Each entry is a glob matched against a project's name, id or git remote, so my work skills now carry `--projects '*emergentbase/*,work'`. They reach every agent, but only in work repos, and never in my personal projects.
+**Update, October 5:** v0.2 added the project scopes you see above, and v0.2.1 rebuilt the page. Each entry is a glob matched against a project's name, id or git remote, so my work skills now carry `--projects '*emergentbase/*,work'`. They reach every agent, but only in work repos, and never in my personal projects.
 
 * * *
 
