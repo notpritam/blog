@@ -1,11 +1,11 @@
 ---
 title: My agents don't all need the same skills, so I made bb stop handing them out
-subtitle: Scoped Skills gives a skill only to the agents and models that can use it. It started as a cleanup and ended as a plugin, and the part that decides who gets what is a few dozen lines.
+subtitle: Scoped Skills gives a skill only to the agents, models and projects that should have it. It started as a cleanup and ended as a plugin, and the part that decides who gets what is a few dozen lines.
 slug: scoped-skills
 tags: [bb, agents, plugins, skills]
 cover: ./architecture.webp
-cover_alt: Diagram of a Claude Code thread and a Codex thread starting in bb; Scoped Skills checks each skill's scope and the Codex session receives three extra skills
-seo_description: How I consolidated Claude and Codex skills into bb and built Scoped Skills, a plugin that gives each skill only to the agents and models that can use it.
+cover_alt: Diagram of a Claude Code thread and a Codex thread starting in bb; Scoped Skills checks each skill's agent, model and project scope, and the Codex session receives four extra skills
+seo_description: How I consolidated Claude and Codex skills into bb and built Scoped Skills, a plugin that gives each skill only to the agents, models and projects that should have it.
 ---
 
 I run Claude Code and Codex side by side inside [bb](https://getbb.app), and over a few months they each grew their own pile of skills. Some I installed with `npx skills`, some came from plugins, some I wrote. Some lived in `~/.claude/skills`, some in `~/.codex/skills`, and a lot of them in `~/.agents/skills`, symlinked back and forth so that deleting one folder would quietly break two agents.
@@ -28,7 +28,7 @@ What I wanted was a scope on the skill itself: *these agents*, optionally *these
 
 ## bb already asks the right question
 
-bb's plugin SDK has a hook, `bb.agents.configure`. When a thread starts, bb calls it with the thread's context, including which agent and model are running, and the plugin answers with the names of its own skills and tools to inject. Any of the plugin's skills it leaves out don't reach that session.
+bb's plugin SDK has a hook, `bb.agents.configure`. When a thread starts, bb calls it with the thread's context, including which agent and model are running and which project it's in, and the plugin answers with the names of its own skills and tools to inject. Any of the plugin's skills it leaves out don't reach that session.
 
 So the whole feature is a library of skills, each with a scope, plus a configure callback that filters it:
 
@@ -37,19 +37,22 @@ bb.agents.configure((context) => ({
   tools: [...TOOL_NAMES],
   skills: [
     GUIDE_SKILL,
-    ...preview(context.provider.id, context.provider.model).included,
+    ...preview(context.provider.id, context.provider.model, {
+      id: context.project.id,
+      name: context.project.name,
+      gitRemoteUrl: context.project.gitRemoteUrl,
+    }).included,
   ],
 }));
 ```
 
-`preview` walks the library and checks each scope. A scope is a list of agent ids (or none, meaning everyone) and a list of model globs (or none):
+`preview` walks the library and checks each scope. A scope is a list of agent ids, a list of model globs and a list of project globs; leaving one out means no limit on it:
 
 ```ts
-export function scopeMatches(scope: Scope, agent: string, model: string): boolean {
+export function scopeMatches(scope: Scope, agent: string, model: string, project: ProjectRef | null): boolean {
   if (scope.agents !== null && !scope.agents.includes(agent)) return false;
-  if (scope.models !== null && !scope.models.some((p) => globToRegExp(p).test(model))) {
-    return false;
-  }
+  if (scope.models !== null && !scope.models.some((p) => globToRegExp(p).test(model))) return false;
+  if (scope.projects !== null && (project === null || !projectMatches(scope.projects, project))) return false;
   return true;
 }
 ```
@@ -131,4 +134,4 @@ Same machine, same skill folders. The shared skills reach both, and the image sk
 bb plugin install git:github.com/notpritam/bb-plugin-scoped-skills@^0.2.0
 ```
 
-The source is on [GitHub](https://github.com/notpritam/bb-plugin-scoped-skills) under MIT. It's about 1,200 lines of TypeScript: roughly 590 for the server, CLI and tools, 420 for the page, and 230 for the library logic.
+The source is on [GitHub](https://github.com/notpritam/bb-plugin-scoped-skills) under MIT. It's about 1,800 lines of TypeScript: roughly 600 for the server, CLI and tools, 960 for the page, and 230 for the library and scope logic.
