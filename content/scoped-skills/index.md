@@ -130,8 +130,10 @@ Same machine, same skill folders. The shared skills reach both, and the image sk
 
 ## Try it
 
+Scoped Skills is in BB Community: open **Extensions** in bb and search for it, or run
+
 ```sh
-bb plugin install git:github.com/notpritam/bb-plugin-scoped-skills@^0.2.0
+bb plugin install scoped-skills@bb-community
 ```
 
 The source is on [GitHub](https://github.com/notpritam/bb-plugin-scoped-skills) under MIT. It's about 1,800 lines of TypeScript: roughly 600 for the server, CLI and tools, 960 for the page, and 230 for the library and scope logic.
