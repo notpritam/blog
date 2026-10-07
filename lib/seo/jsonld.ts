@@ -3,9 +3,12 @@ import type { Settings } from '@/lib/settings';
 
 type Json = Record<string, unknown>;
 
+// Same @id as the Person on the portfolio (author_url), so search engines join the two.
+const personId = (s: Settings) => `${s.author_url.replace(/\/$/, '')}/#person`;
+
 export function personJsonLd(s: Settings): Json & { sameAs: string[] } {
   const sameAs = [s.social_github, s.social_linkedin, s.social_x, s.social_youtube, s.author_url].filter(Boolean);
-  return { '@type': 'Person', '@id': `${s.author_url}#person`, name: s.author_name, url: s.author_url, description: s.author_bio, sameAs };
+  return { '@type': 'Person', '@id': personId(s), name: s.author_name, url: s.author_url, description: s.author_bio, sameAs };
 }
 
 export function websiteJsonLd(s: Settings, base: string): Json {
@@ -24,8 +27,8 @@ export function blogPostingJsonLd(post: PostFull, s: Settings, base: string): Js
     headline: post.seoTitle ?? post.title, alternativeHeadline: post.subtitle || undefined,
     description: post.seoDescription ?? post.excerpt, image, url, mainEntityOfPage: url,
     datePublished: post.publishedAt, dateModified: Date.parse(post.updatedAt) > Date.parse(post.publishedAt) ? post.updatedAt : post.publishedAt,
-    author: { '@type': 'Person', name: s.author_name, url: s.author_url },
-    publisher: { '@type': 'Person', name: s.author_name, url: s.author_url },
+    author: { '@type': 'Person', '@id': personId(s), name: s.author_name, url: s.author_url },
+    publisher: { '@type': 'Person', '@id': personId(s), name: s.author_name, url: s.author_url },
     keywords: post.tags.join(', '), wordCount: post.wordCount, inLanguage: 'en', isAccessibleForFree: true,
     timeRequired: `PT${post.readingMinutes}M`,
   };

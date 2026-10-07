@@ -21,14 +21,15 @@ describe('jsonld', () => {
     expect(j.image).toEqual(['https://blog.notpritam.in/uploads/2026/09/aa-cover.png', 'https://blog.notpritam.in/og/hello.png']);
     expect(j.datePublished).toBe('2026-05-21T19:45:54.777Z');
     expect(j.dateModified).toBe('2026-06-01T00:00:00.000Z');
-    expect(j.author).toEqual({ '@type': 'Person', name: 'Pritam Sharma', url: 'https://notpritam.in' });
+    expect(j.author).toEqual({ '@type': 'Person', '@id': 'https://www.notpritam.in/#person', name: 'Pritam Sharma', url: 'https://www.notpritam.in' });
     expect(j.keywords).toBe('tools, agents');
     expect(j.wordCount).toBe(800);
     expect(j.mainEntityOfPage).toBe('https://blog.notpritam.in/hello');
   });
   it('builds WebSite, Person and BreadcrumbList', () => {
     expect(websiteJsonLd(s, 'https://x.dev')['@type']).toBe('WebSite');
-    expect(personJsonLd(s).sameAs).toEqual(['https://github.com/notpritam', 'https://www.linkedin.com/in/notpritamsharma/', 'https://notpritam.in']);
+    expect(personJsonLd(s).sameAs).toEqual(['https://github.com/notpritam', 'https://www.linkedin.com/in/notpritamsharma/', 'https://x.com/notpritamsharma', 'https://www.notpritam.in']);
+    expect(personJsonLd(s)['@id']).toBe('https://www.notpritam.in/#person');
     const b = breadcrumbJsonLd([{ name: 'Home', url: 'https://x.dev/' }, { name: 'Hello', url: 'https://x.dev/hello' }]);
     expect(b.itemListElement[1]).toEqual({ '@type': 'ListItem', position: 2, name: 'Hello', item: 'https://x.dev/hello' });
   });

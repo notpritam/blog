@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getDb } from '@/lib/db/client';
 import { listTags } from '@/lib/posts/queries';
+import { pageMetadata } from '@/lib/seo/metadata';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Tags', description: 'Every topic on the blog.', alternates: { canonical: '/tags' } };
+export const metadata: Metadata = pageMetadata('Tags', 'Every topic on the blog.', '/tags');
 
 export default function TagsPage() {
   const tags = listTags(getDb());

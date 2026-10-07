@@ -3,10 +3,11 @@ import Image from 'next/image';
 import { JsonLd } from '@/components/seo/json-ld';
 import { getDb } from '@/lib/db/client';
 import { personJsonLd } from '@/lib/seo/jsonld';
-import { getSettings } from '@/lib/settings';
+import { SETTING_DEFAULTS, getSettings } from '@/lib/settings';
+import { pageMetadata } from '@/lib/seo/metadata';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'About', alternates: { canonical: '/about' } };
+export const metadata: Metadata = pageMetadata('About', SETTING_DEFAULTS.author_bio, '/about');
 
 export default function AboutPage() {
   const s = getSettings(getDb());

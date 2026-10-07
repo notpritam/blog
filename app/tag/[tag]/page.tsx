@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo/metadata';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { PostGrid } from '@/components/posts/post-grid';
 import { JsonLd } from '@/components/seo/json-ld';
@@ -17,7 +18,7 @@ function normalizeTag(tag: string) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { tag } = await params;
   const t = normalizeTag(tag);
-  return { title: `Tagged “${t}”`, description: `Writing tagged ${t}.`, alternates: { canonical: `/tag/${encodeURIComponent(t)}` } };
+  return pageMetadata(`Tagged “${t}”`, `Writing tagged ${t}.`, `/tag/${encodeURIComponent(t)}`);
 }
 
 export default async function TagPage({ params }: Params) {

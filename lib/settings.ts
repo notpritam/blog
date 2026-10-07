@@ -10,10 +10,10 @@ export const SETTING_DEFAULTS = {
   author_bio:
     'Software engineer and founding engineer at Emergent. I build developer tools, browser extensions and agent workflows, and write down what I learn.',
   author_avatar: '/avatar.jpg',
-  author_url: 'https://notpritam.in',
+  author_url: 'https://www.notpritam.in',
   social_github: 'https://github.com/notpritam',
   social_linkedin: 'https://www.linkedin.com/in/notpritamsharma/',
-  social_x: '',
+  social_x: 'https://x.com/notpritamsharma',
   social_youtube: '',
   accent: '#b64326',
   google_site_verification: '',

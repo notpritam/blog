@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { siteUrl, type Settings } from '@/lib/settings';
+import { SETTING_DEFAULTS, siteUrl, type Settings } from '@/lib/settings';
 
 export function rootMetadata(s: Settings): Metadata {
   const base = siteUrl();
@@ -21,5 +21,18 @@ export function rootMetadata(s: Settings): Metadata {
     twitter: { card: 'summary_large_image', title: `${s.site_title} · Blog`, description: s.site_description, images: [`${base}/og/site.png`] },
     robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } },
     ...(s.google_site_verification && { verification: { google: s.google_site_verification } }),
+  };
+}
+
+/** Page-level title, description, canonical and matching social card (child metadata replaces the root's openGraph). */
+export function pageMetadata(title: string, description: string, path: string): Metadata {
+  const full = `${title} · ${SETTING_DEFAULTS.site_title}`;
+  const images = [{ url: '/og/site.png', width: 1200, height: 630 }];
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { type: 'website', siteName: SETTING_DEFAULTS.site_title, url: path, title: full, description, images },
+    twitter: { card: 'summary_large_image', title: full, description, images: ['/og/site.png'] },
   };
 }
