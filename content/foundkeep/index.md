@@ -13,7 +13,7 @@ A bookmark keeps the URL and drops everything that made the page worth keeping. 
 
 So I built the thing I wanted: one library where a page, a screenshot, a highlight or a whole thread arrives with its source still attached, and stays searchable.
 
-It is called FoundKeep. Found it? Keep it. [foundkeep.app](https://foundkeep.app), source on [GitHub](https://github.com/notpritam/foundkeep).
+It is called FoundKeep. Found it? Keep it. [foundkeep.app](https://foundkeep.app), setup guide on [help.foundkeep.app](https://help.foundkeep.app/getting-started/).
 
 * * *
 
